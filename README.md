@@ -1,2 +1,1 @@
-![](https://github-readme-stats.vercel.app/api?username=feedod&show_icons=true&theme=midnight-purple&hide_border=true&border_radius=20&include_all_commits=true&count_private=false)
-![](https://komarev.com/ghpvc/?username=feedod&color=blueviolet)
+[![GitHub WidgetBox](https://github-widgetbox.vercel.app/api/profile?username=feedod&data=followers,repositories,stars,commits)](https://github.com/Jurredr/github-widgetbox)
