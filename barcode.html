@@ -1468,18 +1468,39 @@ async startCamera() {
   const video = this.$refs.videoElement;
   if (video) {
     video.srcObject = this.stream;
+    video.setAttribute('autoplay', '');
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.setAttribute('muted', '');
+    video.muted = true;
+    video.playsInline = true;
     
     await new Promise((resolve, reject) => {
-      video.onloadedmetadata = resolve;
-      video.onerror = reject;
-      setTimeout(reject, 5000);
+      const timeout = setTimeout(() => reject(new Error('Video timeout')), 10000);
+      video.onloadedmetadata = () => {
+        clearTimeout(timeout);
+        resolve();
+      };
+      video.onerror = (e) => {
+        clearTimeout(timeout);
+        reject(e);
+      };
     });
     
-    video.setAttribute('playsinline', 'true');
-    video.setAttribute('webkit-playsinline', 'true');
-    video.muted = true;
+    try {
+      await video.play();
+    } catch (playError) {
+      const playOnInteraction = async () => {
+        try {
+          await video.play();
+          document.removeEventListener('touchstart', playOnInteraction);
+          document.removeEventListener('click', playOnInteraction);
+        } catch {}
+      };
+      document.addEventListener('touchstart', playOnInteraction, { once: true });
+      document.addEventListener('click', playOnInteraction, { once: true });
+    }
     
-    await video.play();
     this.startScanning();
   }
 },
