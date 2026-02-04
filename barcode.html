@@ -316,7 +316,7 @@
   <body
     x-data="ScannerApp"
     x-init="init()"
-    @beforeunload.window="destroy()"
+    @pagehide.window="destroy()"
     class="flex min-h-dvh flex-col select-none bg-bg text-text"
   >
     <template x-if="appState === 'permission'">
@@ -327,7 +327,7 @@
           <div
             class="flex h-28 w-28 items-center justify-center rounded-[28px] bg-gradient-to-br from-surface-elevated to-surface"
             style="
-              ## box-shadow:
+              box-shadow:
                 0 0 0 1px rgba(255, 255, 255, 0.1),
                 0 20px 40px rgba(0, 0, 0, 0.4);
             "
@@ -459,7 +459,7 @@
         <header class="fade-in px-4 pb-4 pt-6 text-center">
           <h1 class="text-lg font-semibold text-text">Сканер ценников</h1>
           <p class="mt-1 text-sm text-muted" x-text="statusMessage"></p>
-        </header>
+        </header
 
         <section class="fade-in px-4" style="animation-delay: 50ms">
           <div
@@ -467,7 +467,7 @@
             class="relative overflow-hidden rounded-3xl bg-black"
             :style="{ height: scannerHeight + 'px' }"
             style="
-              ## box-shadow:
+              box-shadow:
                 0 0 0 1px rgba(255, 255, 255, 0.1),
                 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             "
@@ -805,9 +805,9 @@
       x-show="showCopyToast"
       x-transition:enter="transition ease-out duration-200"
       x-transition:enter-start="opacity-0 translate-y-4"
-      x-transition:enter-end="opacity-1 translate-y-0"
+      x-transition:enter-end="opacity-100 translate-y-0"
       x-transition:leave="transition ease-in duration-150"
-      x-transition:leave-start="opacity-1 translate-y-0"
+      x-transition:leave-start="opacity-100 translate-y-0"
       x-transition:leave-end="opacity-0 translate-y-4"
       class="glass fixed bottom-8 left-1/2 z-50 -translate-x-1/2 rounded-full px-5 py-3"
     >
@@ -838,7 +838,6 @@
       } from "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/+esm";
 
       const PRODUCT_DATABASE = {
-        // Чипсы и снеки
         "4607065370015": {
           name: "Чипсы Московская картошка",
           weight: "130г",
@@ -904,8 +903,6 @@
           weight: "125г",
           price: "119.99",
         },
-
-        // Колбасы и мясо
         "4607065370145": {
           name: "Колбаса Докторская",
           weight: "400г",
@@ -936,8 +933,6 @@
           weight: "450г",
           price: "115.49",
         },
-
-        // Молочные продукты
         "4607065370206": {
           name: "Сыр Российский",
           weight: "200г",
@@ -968,8 +963,6 @@
           weight: "290г",
           price: "29.99",
         },
-
-        // Хлеб и выпечка
         "4607065370268": {
           name: "Батон нарезной",
           weight: "400г",
@@ -985,8 +978,6 @@
           weight: "5шт",
           price: "26.99",
         },
-
-        // Напитки
         "4607065370299": {
           name: "Сок апельсиновый",
           weight: "1л",
@@ -997,8 +988,6 @@
           weight: "1.5л",
           price: "24.99",
         },
-
-        // Соусы и приправы
         "4607065370312": {
           name: "Соломка солёная",
           weight: "100г",
@@ -1009,8 +998,6 @@
           weight: "100г",
           price: "18.99",
         },
-
-        // Орехи
         "4607065370336": {
           name: "Кедровый орех",
           weight: "100г",
@@ -1026,8 +1013,6 @@
           weight: "200г",
           price: "68.69",
         },
-
-        // Дополнительные товары с фото
         "4607065370367": {
           name: "Чипсы Lay's Сметана и лук",
           weight: "140г",
@@ -1073,9 +1058,7 @@
             if (typeof tg.setBackgroundColor === "function") {
               tg.setBackgroundColor("#000000");
             }
-          } catch (e) {
-            console.warn("[TelegramApp] Init error:", e);
-          }
+          } catch (e) {}
         }
 
         static hapticImpact(style = "light") {
@@ -1123,9 +1106,7 @@
             this.context = new (window.AudioContext ||
               window.webkitAudioContext)();
             this.initialized = true;
-          } catch (e) {
-            console.warn("[AudioManager] Failed to init:", e);
-          }
+          } catch (e) {}
         }
 
         playSuccess() {
@@ -1154,9 +1135,7 @@
 
             osc.start();
             osc.stop(this.context.currentTime + 0.15);
-          } catch (e) {
-            console.warn("[AudioManager] Play error:", e);
-          }
+          } catch (e) {}
         }
 
         playError() {
@@ -1198,7 +1177,7 @@
           this.rafId = null;
           this.lastScanTime = 0;
           this.scanCooldown = 1000;
-          this.frameInterval = 1000 / 10; // 10 FPS
+          this.frameInterval = 1000 / 10;
           this.lastFrameTime = 0;
         }
 
@@ -1296,7 +1275,7 @@
         torchOn: false,
 
         scannedItems: [],
-        scannedCodes: new Set(),
+        scannedCodes: {},
         itemIdCounter: 0,
 
         scannerHeight: 0,
@@ -1306,6 +1285,9 @@
         stream: null,
         scanner: new BarcodeScanner(),
         audio: new AudioManager(),
+
+        _resizeHandler: null,
+        _orientationHandler: null,
 
         get statusMessage() {
           if (this.scannedItems.length > 0) {
@@ -1330,15 +1312,24 @@
           this.audio.init();
           this.calculateDimensions();
 
-          window.addEventListener("resize", () => this.calculateDimensions());
-          window.addEventListener("orientationchange", () => {
+          this._resizeHandler = () => this.calculateDimensions();
+          this._orientationHandler = () => {
             setTimeout(() => this.calculateDimensions(), 100);
-          });
+          };
+
+          window.addEventListener("resize", this._resizeHandler);
+          window.addEventListener("orientationchange", this._orientationHandler);
 
           await this.checkPermission();
         },
 
         destroy() {
+          if (this._resizeHandler) {
+            window.removeEventListener("resize", this._resizeHandler);
+          }
+          if (this._orientationHandler) {
+            window.removeEventListener("orientationchange", this._orientationHandler);
+          }
           this.stopCamera();
           this.scanner.stop();
         },
@@ -1386,7 +1377,7 @@
               }
             });
           } catch (e) {
-            console.warn("[checkPermission]", e);
+            this.appState = "permission";
           }
         },
 
@@ -1401,7 +1392,6 @@
             await this.startCamera();
             this.appState = "scanner";
           } catch (e) {
-            console.error("[requestCameraPermission]", e);
             this.permissionError = true;
             TelegramApp.hapticNotification("error");
             this.audio.playError();
@@ -1451,7 +1441,6 @@
               this.startScanning();
             }
           } catch (e) {
-            console.error("[startCamera]", e);
             throw e;
           }
         },
@@ -1483,7 +1472,6 @@
               advanced: [{ torch: this.torchOn }],
             });
           } catch (e) {
-            console.warn("[toggleTorch]", e);
             this.torchOn = false;
           }
         },
@@ -1543,14 +1531,12 @@
           const code = this.extractCode(rawText);
           if (!code) return;
 
-          // Check for duplicates
-          if (this.scannedCodes.has(code)) {
-            // Already scanned - light feedback
+          if (this.scannedCodes[code]) {
             TelegramApp.hapticImpact("light");
             return;
           }
 
-          this.scannedCodes.add(code);
+          this.scannedCodes[code] = true;
 
           const type = this.detectCodeType(rawText, code);
           const item = {
@@ -1567,7 +1553,6 @@
           this.scannedItems.unshift(item);
           this.triggerSuccessFeedback();
 
-          // Lookup product info
           this.lookupProduct(item);
         },
 
@@ -1576,7 +1561,6 @@
 
           text = text.trim();
 
-          // Handle semicolon-separated values (common in price tags)
           if (text.includes(";")) {
             const parts = text.split(";");
             for (const part of parts) {
@@ -1587,13 +1571,11 @@
             }
           }
 
-          // Extract numeric code
           const numericOnly = text.replace(/\D/g, "");
           if (/^\d{8}$|^\d{12,14}$/.test(numericOnly)) {
             return numericOnly;
           }
 
-          // Return original if it's a reasonable length (QR code content)
           if (text.length > 0 && text.length <= 256) {
             return text;
           }
@@ -1602,7 +1584,6 @@
         },
 
         detectCodeType(raw, code) {
-          // QR codes usually have more complex content
           if (raw !== code && raw.length > 20) return "QR Code";
           if (/^\d{13}$/.test(code)) return "EAN-13";
           if (/^\d{8}$/.test(code)) return "EAN-8";
@@ -1613,36 +1594,31 @@
         },
 
         lookupProduct(item) {
-          // Simulate async lookup with timeout
           setTimeout(() => {
-            const productInfo = PRODUCT_DATABASE[item.code];
-
             const itemIndex = this.scannedItems.findIndex(
               (i) => i.id === item.id
             );
             if (itemIndex === -1) return;
 
-            this.scannedItems[itemIndex].loading = false;
+            const productInfo = PRODUCT_DATABASE[item.code];
 
-            if (productInfo) {
-              this.scannedItems[itemIndex].productInfo = productInfo;
-            } else {
-              this.scannedItems[itemIndex].notFound = true;
-            }
+            this.scannedItems[itemIndex] = {
+              ...this.scannedItems[itemIndex],
+              loading: false,
+              productInfo: productInfo || null,
+              notFound: !productInfo,
+            };
           }, 500);
         },
 
         triggerSuccessFeedback() {
-          // Visual flash
           this.flashActive = true;
           setTimeout(() => {
             this.flashActive = false;
           }, 300);
 
-          // Haptic
           TelegramApp.hapticNotification("success");
 
-          // Audio
           this.audio.playSuccess();
         },
 
@@ -1666,7 +1642,6 @@
         },
 
         handleImageError(event) {
-          // Replace broken image with placeholder
           event.target.style.display = "none";
         },
 
@@ -1682,7 +1657,6 @@
               this.showCopyToast = false;
             }, 2000);
           } catch (e) {
-            console.warn("[copyCode]", e);
             TelegramApp.hapticNotification("error");
           }
         },
@@ -1692,7 +1666,7 @@
 
           const item = this.scannedItems.find((i) => i.id === id);
           if (item) {
-            this.scannedCodes.delete(item.code);
+            delete this.scannedCodes[item.code];
           }
 
           this.scannedItems = this.scannedItems.filter((i) => i.id !== id);
@@ -1713,7 +1687,7 @@
 
         clearAll() {
           this.scannedItems = [];
-          this.scannedCodes.clear();
+          this.scannedCodes = {};
           TelegramApp.hapticNotification("success");
         },
       }));
