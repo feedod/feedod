@@ -1382,68 +1382,107 @@
         },
 
         async requestCameraPermission() {
-          if (this.isLoading) return;
+  if (this.isLoading) return;
 
-          this.isLoading = true;
-          this.permissionError = false;
-          TelegramApp.hapticImpact("light");
+  this.isLoading = true;
+  this.permissionError = false;
+  TelegramApp.hapticImpact("light");
 
-          try {
-            await this.startCamera();
-            this.appState = "scanner";
-          } catch (e) {
-            this.permissionError = true;
-            TelegramApp.hapticNotification("error");
-            this.audio.playError();
-          } finally {
-            this.isLoading = false;
-          }
-        },
+  try {
+    this.appState = "scanner";
+    await this.$nextTick();
+    await this.startCamera();
+  } catch (e) {
+    this.permissionError = true;
+    this.appState = "permission";
+    TelegramApp.hapticNotification("error");
+    this.audio.playError();
+  } finally {
+    this.isLoading = false;
+  }
+},
 
-        async startCamera() {
-          try {
-            this.stream = await navigator.mediaDevices.getUserMedia({
-              video: {
-                facingMode: { ideal: "environment" },
-                width: { ideal: 1920, min: 1280 },
-                height: { ideal: 1080, min: 720 },
-              },
-              audio: false,
-            });
+async startCamera() {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const videoDevices = devices.filter(d => d.kind === 'videoinput');
+  
+  let constraints = {
+    video: {
+      facingMode: { ideal: "environment" },
+      width: { ideal: 1920, min: 640 },
+      height: { ideal: 1080, min: 480 },
+    },
+    audio: false,
+  };
+  
+  const backCamera = videoDevices.find(d => 
+    d.label.toLowerCase().includes('back') || 
+    d.label.toLowerCase().includes('rear') ||
+    d.label.toLowerCase().includes('environment')
+  );
+  
+  if (backCamera && backCamera.deviceId) {
+    constraints.video = {
+      deviceId: { exact: backCamera.deviceId },
+      width: { ideal: 1920, min: 640 },
+      height: { ideal: 1080, min: 480 },
+    };
+  }
 
-            const track = this.stream.getVideoTracks()[0];
+  try {
+    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+  } catch (e) {
+    this.stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false,
+    });
+  }
 
-            const capabilities = track.getCapabilities?.() || {};
-            this.hasTorch = !!capabilities.torch;
+  const track = this.stream.getVideoTracks()[0];
+  
+  if (!track) {
+    throw new Error("No video track");
+  }
 
-            const advancedConstraints = {};
-            if (capabilities.focusMode?.includes("continuous")) {
-              advancedConstraints.focusMode = "continuous";
-            }
-            if (capabilities.exposureMode?.includes("continuous")) {
-              advancedConstraints.exposureMode = "continuous";
-            }
+  const capabilities = track.getCapabilities?.() || {};
+  this.hasTorch = !!capabilities.torch;
 
-            if (Object.keys(advancedConstraints).length > 0) {
-              try {
-                await track.applyConstraints({
-                  advanced: [advancedConstraints],
-                });
-              } catch {}
-            }
+  const advancedConstraints = {};
+  if (capabilities.focusMode?.includes("continuous")) {
+    advancedConstraints.focusMode = "continuous";
+  }
+  if (capabilities.exposureMode?.includes("continuous")) {
+    advancedConstraints.exposureMode = "continuous";
+  }
 
-            await this.$nextTick();
+  if (Object.keys(advancedConstraints).length > 0) {
+    try {
+      await track.applyConstraints({
+        advanced: [advancedConstraints],
+      });
+    } catch {}
+  }
 
-            const video = this.$refs.videoElement;
-            if (video) {
-              video.srcObject = this.stream;
-              await video.play();
-              this.startScanning();
-            }
-          } catch (e) {
-            throw e;
-          }
-        },
+  await this.$nextTick();
+
+  const video = this.$refs.videoElement;
+  if (video) {
+    video.srcObject = this.stream;
+    
+    await new Promise((resolve, reject) => {
+      video.onloadedmetadata = resolve;
+      video.onerror = reject;
+      setTimeout(reject, 5000);
+    });
+    
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('webkit-playsinline', 'true');
+    video.muted = true;
+    
+    await video.play();
+    this.startScanning();
+  }
+},
 
         stopCamera() {
           this.scannerActive = false;
