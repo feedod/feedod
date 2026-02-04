@@ -1403,6 +1403,8 @@ async startCamera() {
   await this.$nextTick();
   await new Promise(r => setTimeout(r, 100));
   
+  this.calculateDimensions();
+  
   let stream = null;
   
   const constraints = [
@@ -1465,6 +1467,7 @@ async startCamera() {
 
   try {
     await video.play();
+    this.calculateDimensions();
   } catch (e) {
     document.addEventListener("click", () => video.play(), { once: true });
     document.addEventListener("touchstart", () => video.play(), { once: true });
