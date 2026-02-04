@@ -1,242 +1,970 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Sheet Scanner God Mode</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark" />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --color-bg: #09090b;
+        --color-surface: #18181b;
+        --color-surface-elevated: #27272a;
+        --color-border: #3f3f46;
+        --color-text: #fafafa;
+        --color-muted: #a1a1aa;
+        --color-success: #22c55e;
+        --color-error: #ef4444;
+        --color-accent: #3b82f6;
+      }
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+      * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+      }
 
-<style>
-  main { text-align:center }
+      html,
+      body {
+        background: var(--color-bg);
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          "SF Pro Text",
+          system-ui,
+          sans-serif;
+        overscroll-behavior: none;
+        -webkit-font-smoothing: antialiased;
+        scrollbar-width: none;
+      }
 
-  .scanner {
-    position:relative;
-    max-width:900px;
-    margin:1rem auto;
-  }
+      html::-webkit-scrollbar,
+      body::-webkit-scrollbar {
+        display: none;
+      }
 
-  video {
-    width:100%;
-    border-radius:12px;
-    display:block;
-  }
+      body {
+        padding: env(safe-area-inset-top) env(safe-area-inset-right)
+          env(safe-area-inset-bottom) env(safe-area-inset-left);
+      }
 
-  .overlay {
-    position:absolute;
-    inset:0;
-    pointer-events:none;
-  }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-  .frame {
-    position:absolute;
-    top:50%;
-    left:50%;
-    width:62%;
-    aspect-ratio:1 / 1.41421356;
-    transform:translate(-50%,-50%);
-    border:2px solid rgba(0,255,0,.7);
-    border-radius:10px;
-    transition:.15s;
-  }
+      @keyframes scan {
+        0% {
+          top: 0;
+          opacity: 1;
+        }
+        45% {
+          top: calc(100% - 3px);
+          opacity: 1;
+        }
+        50% {
+          top: calc(100% - 3px);
+          opacity: 0.3;
+        }
+        55% {
+          top: calc(100% - 3px);
+          opacity: 1;
+        }
+        100% {
+          top: 0;
+          opacity: 1;
+        }
+      }
 
-  .frame.flash {
-    border-color:#00ff00;
-    box-shadow:0 0 20px rgba(0,255,0,.6);
-  }
+      @keyframes successPulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+        }
+        70% {
+          box-shadow: 0 0 0 12px rgba(34, 197, 94, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+        }
+      }
 
-  button { width:100% }
+      @keyframes shimmer {
+        0% {
+          background-position: -200% 0;
+        }
+        100% {
+          background-position: 200% 0;
+        }
+      }
 
-  article {
-    margin-top:2rem;
-    padding-top:1rem;
-    border-top:1px solid var(--pico-muted-border-color);
-  }
+      .fade {
+        animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
 
-  img {
-    width:100%;
-    height:120px;
-    object-fit:contain;
-    margin-top:.5rem;
-  }
+      .scan-line {
+        animation: scan 2.5s ease-in-out infinite;
+      }
 
-  code { font-size:.9rem }
-</style>
-</head>
+      .success-pulse {
+        animation: successPulse 0.6s ease-out;
+      }
 
-<body>
-<main class="container"
-  x-data="scanner()"
-  x-init="init()"
->
-  <h1>Live Sheet Scanner</h1>
+      .shimmer {
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.1) 50%,
+          transparent 100%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+      }
 
-  <div class="scanner" x-ref="scanner">
-    <video x-ref="video" autoplay playsinline></video>
-    <div class="overlay">
-      <div class="frame" :class="{ flash: flash }"></div>
-    </div>
-  </div>
+      .glass {
+        background: rgba(24, 24, 27, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+    </style>
+  </head>
+  <body
+    x-data="ScannerApp"
+    x-init="init()"
+    @beforeunload.window="destroy()"
+    class="flex min-h-dvh flex-col select-none bg-bg text-text"
+  >
+    <template x-if="cameraState === 'denied' || cameraState === 'prompt'">
+      <main
+        class="fade mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-6"
+      >
+        <div class="relative mb-8">
+          <div
+            class="grid h-24 w-24 place-items-center rounded-3xl border border-border bg-gradient-to-br from-surface-elevated to-surface"
+          >
+            <svg
+              class="h-12 w-12 text-muted"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"
+              />
+            </svg>
+          </div>
+          <div
+            class="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full border-2 border-bg bg-surface-elevated"
+          >
+            <svg
+              class="h-4 w-4 text-accent"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+              />
+            </svg>
+          </div>
+        </div>
 
-  <button @click="toggle" x-text="active ? 'Stop' : 'Start'"></button>
+        <h1 class="mb-3 text-2xl font-bold tracking-tight">Доступ к камере</h1>
+        <p class="mb-10 max-w-xs text-center text-sm leading-relaxed text-muted">
+          Для сканирования документов необходим доступ к камере вашего
+          устройства
+        </p>
 
-  <template x-for="ean in eans" :key="ean">
-    <article>
-      <h3 x-text="ean"></h3>
-      <img :src="qr(ean)" loading="lazy">
-      <img :src="barcode(ean)" loading="lazy">
-    </article>
-  </template>
-</main>
+        <button
+          @click="requestCamera"
+          :disabled="isRequestingCamera"
+          class="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-success font-semibold text-white shadow-lg shadow-success/25 transition-all duration-100 ease-out active:scale-[0.98] disabled:opacity-50"
+        >
+          <template x-if="isRequestingCamera">
+            <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          </template>
+          <template x-if="!isRequestingCamera">
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
+              />
+            </svg>
+          </template>
+          <span
+            x-text="isRequestingCamera ? 'Запрос доступа...' : 'Разрешить камеру'"
+          ></span>
+        </button>
 
-<script type="module">
-import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3/dist/module.esm.js'
-import {
-  BrowserMultiFormatReader,
-  BarcodeFormat,
-  DecodeHintType
-} from 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.2/+esm'
+        <p
+          x-show="cameraState === 'denied'"
+          x-transition
+          class="mt-6 rounded-xl bg-error/10 px-4 py-3 text-center text-sm text-error"
+        >
+          Доступ запрещён. Разрешите камеру в настройках браузера.
+        </p>
+      </main>
+    </template>
 
-window.Alpine = Alpine
+    <template x-if="cameraState === 'granted'">
+      <main class="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pb-8">
+        <header class="fade py-6 text-center">
+          <p class="text-sm text-muted" x-text="statusText"></p>
+        </header>
 
-Alpine.data('scanner', () => ({
-  FPS: 10,
-  COOLDOWN: 600,
-  FRAME_SCALE: 0.62,
+        <section class="fade" style="animation-delay: 50ms">
+          <div
+            x-ref="scanner"
+            class="relative overflow-hidden rounded-3xl border border-border bg-black shadow-2xl"
+            :style="{ height: scannerHeight + 'px' }"
+          >
+            <video
+              x-ref="video"
+              autoplay
+              playsinline
+              muted
+              class="absolute inset-0 h-full w-full object-cover"
+            ></video>
 
-  active:false,
-  stream:null,
-  reader:null,
-  canvas:null,
-  ctx:null,
+            <div class="pointer-events-none absolute inset-0">
+              <div
+                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-200"
+                :class="{ 'success-pulse': isFlashing }"
+                :style="{
+                  width: frameWidth + 'px',
+                  height: frameHeight + 'px',
+                  border: '2px solid ' + (isFlashing ? '#22c55e' : 'rgba(255,255,255,0.5)'),
+                  borderRadius: '16px',
+                  background: 'rgba(0,0,0,0.02)'
+                }"
+              >
+                <div
+                  class="absolute -left-0.5 -top-0.5 h-8 w-8 rounded-tl-xl border-l-[3px] border-t-[3px]"
+                  :class="isFlashing ? 'border-success' : 'border-white'"
+                ></div>
+                <div
+                  class="absolute -right-0.5 -top-0.5 h-8 w-8 rounded-tr-xl border-r-[3px] border-t-[3px]"
+                  :class="isFlashing ? 'border-success' : 'border-white'"
+                ></div>
+                <div
+                  class="absolute -bottom-0.5 -left-0.5 h-8 w-8 rounded-bl-xl border-b-[3px] border-l-[3px]"
+                  :class="isFlashing ? 'border-success' : 'border-white'"
+                ></div>
+                <div
+                  class="absolute -bottom-0.5 -right-0.5 h-8 w-8 rounded-br-xl border-b-[3px] border-r-[3px]"
+                  :class="isFlashing ? 'border-success' : 'border-white'"
+                ></div>
 
-  lastFrame:0,
-  lastHit:0,
-  flash:false,
+                <div
+                  x-show="isScanning && !isFlashing"
+                  class="scan-line absolute left-2 right-2 h-0.5 rounded-full bg-gradient-to-r from-transparent via-success to-transparent shadow-lg shadow-success/50"
+                ></div>
+              </div>
+            </div>
 
-  found:new Set(),
-  eans:[],
+            <div
+              x-show="scannedItems.length > 0"
+              x-transition
+              class="glass absolute right-3 top-3 flex items-center gap-2 rounded-full px-3 py-2"
+            >
+              <div class="grid h-5 w-5 place-items-center rounded-full bg-success">
+                <svg
+                  class="h-3 w-3 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m4.5 12.75 6 6 9-13.5"
+                  />
+                </svg>
+              </div>
+              <span
+                class="text-sm font-bold text-text"
+                x-text="scannedItems.length"
+              ></span>
+            </div>
 
-  audio:null,
+            <div
+              x-show="isScanning"
+              class="glass absolute bottom-3 left-3 flex items-center gap-2 rounded-full px-3 py-2"
+            >
+              <div class="h-2 w-2 animate-pulse rounded-full bg-success"></div>
+              <span class="text-xs font-medium text-text">Сканирование</span>
+            </div>
+          </div>
+        </section>
 
-  init() {
-    const hints = new Map()
-    hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-      BarcodeFormat.QR_CODE,
-      BarcodeFormat.EAN_13
-    ])
-    hints.set(DecodeHintType.TRY_HARDER, true)
+        <template x-if="scannedItems.length > 0">
+          <section class="fade mt-6 space-y-4" style="animation-delay: 100ms">
+            <div class="flex items-center justify-between px-1">
+              <h2 class="text-sm font-semibold text-muted">
+                Найдено: <span class="text-text" x-text="scannedItems.length"></span>
+              </h2>
+              <button
+                @click="clearAll"
+                class="text-sm font-medium text-error transition-opacity active:opacity-60"
+              >
+                Очистить
+              </button>
+            </div>
 
-    this.reader = new BrowserMultiFormatReader(hints)
-    this.canvas = new OffscreenCanvas(1,1)
-    this.ctx = this.canvas.getContext('2d',{ willReadFrequently:true })
-    this.audio = new AudioContext()
-  },
+            <div class="space-y-3">
+              <template x-for="item in scannedItems" :key="item.id">
+                <div
+                  class="fade overflow-hidden rounded-2xl border border-border bg-surface"
+                >
+                  <div class="p-4">
+                    <div class="mb-4 flex items-start justify-between">
+                      <div class="flex items-center gap-3">
+                        <div
+                          class="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-success/15"
+                        >
+                          <svg
+                            class="h-5 w-5 text-success"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="m4.5 12.75 6 6 9-13.5"
+                            />
+                          </svg>
+                        </div>
+                        <div class="min-w-0">
+                          <p
+                            class="truncate font-mono text-base font-bold text-text"
+                            x-text="item.ean"
+                          ></p>
+                          <p class="text-xs text-muted" x-text="item.type"></p>
+                        </div>
+                      </div>
+                      <button
+                        @click="copyToClipboard(item.ean)"
+                        class="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-surface-elevated transition-all active:scale-95"
+                      >
+                        <svg
+                          class="h-5 w-5 text-muted"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9.75a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184"
+                          />
+                        </svg>
+                      </button>
+                    </div>
 
-  async startCamera() {
-    this.stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:'environment' }
-    })
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="rounded-xl bg-white p-3">
+                        <img
+                          :src="getQrUrl(item.ean)"
+                          :alt="'QR: ' + item.ean"
+                          class="mx-auto h-20 w-20 object-contain"
+                          loading="lazy"
+                        />
+                        <p
+                          class="mt-2 text-center text-xs font-medium text-neutral-600"
+                        >
+                          QR Code
+                        </p>
+                      </div>
+                      <div class="rounded-xl bg-white p-3">
+                        <img
+                          :src="getBarcodeUrl(item.ean)"
+                          :alt="'Barcode: ' + item.ean"
+                          class="mx-auto h-20 w-full object-contain"
+                          loading="lazy"
+                        />
+                        <p
+                          class="mt-2 text-center text-xs font-medium text-neutral-600"
+                        >
+                          Barcode
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </section>
+        </template>
 
-    const track = this.stream.getVideoTracks()[0]
-    await track.applyConstraints({
-      focusMode:'continuous',
-      exposureMode:'continuous'
-    })
+        <template x-if="scannedItems.length === 0 && isScanning">
+          <section
+            class="fade mt-8 rounded-2xl border border-border bg-surface p-8 text-center"
+            style="animation-delay: 100ms"
+          >
+            <div
+              class="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-surface-elevated"
+            >
+              <svg
+                class="h-8 w-8 text-muted"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"
+                />
+              </svg>
+            </div>
+            <p class="font-semibold text-text">Наведите на документ</p>
+            <p class="mt-1 text-sm text-muted">
+              Расположите лист A4 в рамке сканера
+            </p>
+          </section>
+        </template>
+      </main>
+    </template>
 
-    this.$refs.video.srcObject = this.stream
-    await this.$refs.video.play()
-  },
+    <script type="module">
+      import Alpine from "https://cdn.jsdelivr.net/npm/alpinejs@3/dist/module.esm.js";
+      import {
+        BrowserMultiFormatReader,
+        BarcodeFormat,
+        DecodeHintType,
+      } from "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/+esm";
 
-  stopCamera() {
-    this.stream?.getTracks().forEach(t=>t.stop())
-    this.reader.reset()
-  },
+      class TelegramWebApp {
+        static get instance() {
+          return window.Telegram?.WebApp;
+        }
 
-  async loop(ts) {
-    if (!this.active) return
-    if (ts - this.lastFrame < 1000 / this.FPS) {
-      requestAnimationFrame(this.loop.bind(this))
-      return
-    }
-    this.lastFrame = ts
+        static initialize() {
+          const app = this.instance;
+          if (!app) return;
 
-    const v = this.$refs.video
-    if (!v.videoWidth) {
-      requestAnimationFrame(this.loop.bind(this))
-      return
-    }
+          try {
+            app.ready();
+            app.expand();
+            app.disableVerticalSwipes?.();
+            app.setHeaderColor?.("#09090b");
+            app.setBackgroundColor?.("#09090b");
+          } catch (err) {
+            console.error("[TelegramWebApp]", err);
+          }
+        }
 
-    const rect = this.$refs.scanner.getBoundingClientRect()
-    const frame = this.$el.querySelector('.frame').getBoundingClientRect()
+        static hapticImpact(style = "light") {
+          try {
+            this.instance?.HapticFeedback?.impactOccurred(style);
+          } catch {}
+        }
 
-    const sx = (frame.left - rect.left) / rect.width * v.videoWidth
-    const sy = (frame.top - rect.top) / rect.height * v.videoHeight
-    const sw = frame.width / rect.width * v.videoWidth
-    const sh = frame.height / rect.height * v.videoHeight
+        static hapticNotification(type) {
+          try {
+            this.instance?.HapticFeedback?.notificationOccurred(type);
+          } catch {}
+        }
 
-    this.canvas.width = sw
-    this.canvas.height = sh
-    this.ctx.drawImage(v, sx, sy, sw, sh, 0, 0, sw, sh)
+        static showConfirm(message, callback) {
+          try {
+            if (this.instance?.showConfirm) {
+              this.instance.showConfirm(message, callback);
+              return;
+            }
+          } catch {}
+          callback(confirm(message));
+        }
+      }
 
-    try {
-      const res = await this.reader.decodeFromCanvas(this.canvas)
-      this.hit(res.getText())
-    } catch {}
+      class BarcodeScanner {
+        constructor() {
+          this.reader = null;
+          this.canvas = null;
+          this.ctx = null;
+          this.isRunning = false;
+          this.animationId = null;
+          this.lastScanTime = 0;
+          this.scanCooldown = 800;
+          this.fps = 12;
+          this.lastFrameTime = 0;
+        }
 
-    requestAnimationFrame(this.loop.bind(this))
-  },
+        init() {
+          const hints = new Map();
+          hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+            BarcodeFormat.QR_CODE,
+            BarcodeFormat.EAN_13,
+            BarcodeFormat.EAN_8,
+            BarcodeFormat.CODE_128,
+            BarcodeFormat.CODE_39,
+            BarcodeFormat.UPC_A,
+            BarcodeFormat.UPC_E,
+            BarcodeFormat.DATA_MATRIX,
+            BarcodeFormat.PDF_417,
+          ]);
+          hints.set(DecodeHintType.TRY_HARDER, true);
 
-  hit(text) {
-    if (performance.now() - this.lastHit < this.COOLDOWN) return
+          this.reader = new BrowserMultiFormatReader(hints);
+          this.canvas = new OffscreenCanvas(1, 1);
+          this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
+        }
 
-    const ean = text.includes(';') ? text.split(';')[1] : text
-    if (!/^\d{13}$/.test(ean)) return
-    if (this.found.has(ean)) return
+        async decode(video, frameRect, scannerRect) {
+          if (!video.videoWidth || !video.videoHeight) return null;
 
-    this.lastHit = performance.now()
-    this.found.add(ean)
-    this.eans.push(ean)
+          const scaleX = video.videoWidth / scannerRect.width;
+          const scaleY = video.videoHeight / scannerRect.height;
 
-    this.feedback()
-  },
+          const sx = Math.max(0, (frameRect.left - scannerRect.left) * scaleX);
+          const sy = Math.max(0, (frameRect.top - scannerRect.top) * scaleY);
+          const sw = Math.min(frameRect.width * scaleX, video.videoWidth - sx);
+          const sh = Math.min(
+            frameRect.height * scaleY,
+            video.videoHeight - sy
+          );
 
-  feedback() {
-    this.flash = true
-    setTimeout(()=>this.flash=false,120)
+          if (sw <= 0 || sh <= 0) return null;
 
-    navigator.vibrate?.(60)
+          this.canvas.width = sw;
+          this.canvas.height = sh;
+          this.ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
 
-    const o = this.audio.createOscillator()
-    const g = this.audio.createGain()
-    o.frequency.value = 880
-    g.gain.value = .08
-    o.connect(g).connect(this.audio.destination)
-    o.start()
-    o.stop(this.audio.currentTime + .07)
-  },
+          try {
+            const result = this.reader.decodeFromCanvas(this.canvas);
+            return result?.getText() || null;
+          } catch {
+            return null;
+          }
+        }
 
-  async toggle() {
-    if (this.active) {
-      this.active=false
-      this.stopCamera()
-      return
-    }
-    await this.startCamera()
-    this.active=true
-    requestAnimationFrame(this.loop.bind(this))
-  },
+        reset() {
+          this.isRunning = false;
+          if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+          }
+          this.reader?.reset();
+        }
+      }
 
-  qr(e) {
-    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${e}`
-  },
+      class AudioFeedback {
+        constructor() {
+          this.context = null;
+        }
 
-  barcode(e) {
-    return `https://quickchart.io/barcode?type=ean13&text=${e}&width=600&height=120`
-  }
-}))
+        init() {
+          try {
+            this.context = new (window.AudioContext ||
+              window.webkitAudioContext)();
+          } catch {}
+        }
 
-Alpine.start()
-</script>
-</body>
+        playSuccess() {
+          if (!this.context) return;
+
+          try {
+            const oscillator = this.context.createOscillator();
+            const gain = this.context.createGain();
+
+            oscillator.type = "sine";
+            oscillator.frequency.setValueAtTime(880, this.context.currentTime);
+            oscillator.frequency.setValueAtTime(
+              1320,
+              this.context.currentTime + 0.08
+            );
+
+            gain.gain.setValueAtTime(0.15, this.context.currentTime);
+            gain.gain.exponentialRampToValueAtTime(
+              0.01,
+              this.context.currentTime + 0.15
+            );
+
+            oscillator.connect(gain);
+            gain.connect(this.context.destination);
+
+            oscillator.start();
+            oscillator.stop(this.context.currentTime + 0.15);
+          } catch {}
+        }
+      }
+
+      Alpine.data("ScannerApp", () => ({
+        cameraState: "prompt",
+        isRequestingCamera: false,
+        isScanning: false,
+        isFlashing: false,
+        scannedItems: [],
+        foundCodes: new Set(),
+        idCounter: 0,
+
+        stream: null,
+        scanner: new BarcodeScanner(),
+        audio: new AudioFeedback(),
+
+        scannerHeight: 0,
+        frameWidth: 0,
+        frameHeight: 0,
+
+        get statusText() {
+          if (this.scannedItems.length > 0) {
+            return `Найдено ${this.scannedItems.length} ${this.pluralize(this.scannedItems.length, "код", "кода", "кодов")}`;
+          }
+          return "Расположите документ A4 в рамке";
+        },
+
+        pluralize(n, one, few, many) {
+          const mod10 = n % 10;
+          const mod100 = n % 100;
+          if (mod100 >= 11 && mod100 <= 19) return many;
+          if (mod10 === 1) return one;
+          if (mod10 >= 2 && mod10 <= 4) return few;
+          return many;
+        },
+
+        async init() {
+          TelegramWebApp.initialize();
+          this.scanner.init();
+          this.audio.init();
+          this.calculateDimensions();
+
+          window.addEventListener("resize", () => this.calculateDimensions());
+
+          await this.checkCameraPermission();
+
+          if (this.cameraState === "granted") {
+            await this.startCamera();
+          }
+        },
+
+        destroy() {
+          this.stopCamera();
+          this.scanner.reset();
+        },
+
+        calculateDimensions() {
+          const viewportHeight = window.innerHeight;
+          const viewportWidth = window.innerWidth;
+
+          this.scannerHeight = Math.min(
+            Math.floor(viewportHeight * 0.55),
+            500
+          );
+
+          const maxWidth = Math.min(viewportWidth - 32, 480);
+          const a4Ratio = 210 / 297;
+
+          this.frameHeight = Math.floor(this.scannerHeight * 0.88);
+          this.frameWidth = Math.floor(this.frameHeight * a4Ratio);
+
+          if (this.frameWidth > maxWidth * 0.92) {
+            this.frameWidth = Math.floor(maxWidth * 0.92);
+            this.frameHeight = Math.floor(this.frameWidth / a4Ratio);
+          }
+        },
+
+        async checkCameraPermission() {
+          try {
+            const result = await navigator.permissions.query({
+              name: "camera",
+            });
+            this.cameraState = result.state;
+
+            result.addEventListener("change", () => {
+              this.cameraState = result.state;
+              if (result.state === "granted" && !this.stream) {
+                this.startCamera();
+              }
+            });
+          } catch {
+            this.cameraState = "prompt";
+          }
+        },
+
+        async requestCamera() {
+          if (this.isRequestingCamera) return;
+
+          this.isRequestingCamera = true;
+          TelegramWebApp.hapticImpact("light");
+
+          try {
+            await this.startCamera();
+            this.cameraState = "granted";
+          } catch (err) {
+            console.error("[requestCamera]", err);
+            this.cameraState = "denied";
+            TelegramWebApp.hapticNotification("error");
+          } finally {
+            this.isRequestingCamera = false;
+          }
+        },
+
+        async startCamera() {
+          try {
+            this.stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                facingMode: "environment",
+                width: { ideal: 1920, min: 1280 },
+                height: { ideal: 1080, min: 720 },
+              },
+              audio: false,
+            });
+
+            const track = this.stream.getVideoTracks()[0];
+            const capabilities = track.getCapabilities?.() || {};
+
+            const constraints = {};
+            if (capabilities.focusMode?.includes("continuous")) {
+              constraints.focusMode = "continuous";
+            }
+            if (capabilities.exposureMode?.includes("continuous")) {
+              constraints.exposureMode = "continuous";
+            }
+            if (capabilities.whiteBalanceMode?.includes("continuous")) {
+              constraints.whiteBalanceMode = "continuous";
+            }
+
+            if (Object.keys(constraints).length > 0) {
+              try {
+                await track.applyConstraints({ advanced: [constraints] });
+              } catch {}
+            }
+
+            await this.$nextTick();
+
+            const video = this.$refs.video;
+            if (video) {
+              video.srcObject = this.stream;
+              await video.play();
+              this.startScanning();
+            }
+          } catch (err) {
+            console.error("[startCamera]", err);
+            throw err;
+          }
+        },
+
+        stopCamera() {
+          this.isScanning = false;
+          this.scanner.reset();
+
+          if (this.stream) {
+            this.stream.getTracks().forEach((track) => track.stop());
+            this.stream = null;
+          }
+
+          const video = this.$refs.video;
+          if (video) {
+            video.srcObject = null;
+          }
+        },
+
+        startScanning() {
+          if (this.isScanning) return;
+
+          this.isScanning = true;
+          this.scanner.isRunning = true;
+          this.scanLoop();
+        },
+
+        async scanLoop() {
+          if (!this.scanner.isRunning || !this.isScanning) return;
+
+          const now = performance.now();
+          const frameInterval = 1000 / this.scanner.fps;
+
+          if (now - this.scanner.lastFrameTime >= frameInterval) {
+            this.scanner.lastFrameTime = now;
+
+            const video = this.$refs.video;
+            const scanner = this.$refs.scanner;
+
+            if (video?.videoWidth && scanner) {
+              const scannerRect = scanner.getBoundingClientRect();
+              const frameRect = {
+                left:
+                  scannerRect.left + (scannerRect.width - this.frameWidth) / 2,
+                top:
+                  scannerRect.top + (scannerRect.height - this.frameHeight) / 2,
+                width: this.frameWidth,
+                height: this.frameHeight,
+              };
+
+              const result = await this.scanner.decode(
+                video,
+                frameRect,
+                scannerRect
+              );
+
+              if (
+                result &&
+                now - this.scanner.lastScanTime >= this.scanner.scanCooldown
+              ) {
+                this.handleScanResult(result);
+                this.scanner.lastScanTime = now;
+              }
+            }
+          }
+
+          this.scanner.animationId = requestAnimationFrame(() =>
+            this.scanLoop()
+          );
+        },
+
+        handleScanResult(text) {
+          const ean = this.extractEan(text);
+          if (!ean) return;
+
+          if (this.foundCodes.has(ean)) return;
+
+          this.foundCodes.add(ean);
+
+          const type = this.detectCodeType(text, ean);
+
+          this.scannedItems.unshift({
+            id: ++this.idCounter,
+            ean,
+            type,
+            raw: text,
+            timestamp: Date.now(),
+          });
+
+          this.triggerFeedback();
+        },
+
+        extractEan(text) {
+          if (!text || typeof text !== "string") return null;
+
+          text = text.trim();
+
+          if (text.includes(";")) {
+            const parts = text.split(";");
+            for (const part of parts) {
+              const cleaned = part.trim().replace(/\D/g, "");
+              if (/^\d{8}$|^\d{12,14}$/.test(cleaned)) {
+                return cleaned;
+              }
+            }
+          }
+
+          const cleaned = text.replace(/\D/g, "");
+          if (/^\d{8}$|^\d{12,14}$/.test(cleaned)) {
+            return cleaned;
+          }
+
+          if (text.length > 0 && text.length <= 200) {
+            return text;
+          }
+
+          return null;
+        },
+
+        detectCodeType(raw, ean) {
+          if (raw !== ean && raw.length > 20) return "QR Code";
+          if (/^\d{13}$/.test(ean)) return "EAN-13";
+          if (/^\d{8}$/.test(ean)) return "EAN-8";
+          if (/^\d{12}$/.test(ean)) return "UPC-A";
+          if (/^\d{14}$/.test(ean)) return "GTIN-14";
+          return "QR Code";
+        },
+
+        triggerFeedback() {
+          this.isFlashing = true;
+          setTimeout(() => {
+            this.isFlashing = false;
+          }, 200);
+
+          TelegramWebApp.hapticNotification("success");
+          this.audio.playSuccess();
+        },
+
+        getQrUrl(ean) {
+          return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(ean)}&margin=8&format=svg`;
+        },
+
+        getBarcodeUrl(ean) {
+          const cleanEan = ean.replace(/\D/g, "");
+          if (/^\d{13}$/.test(cleanEan)) {
+            return `https://barcodeapi.org/api/ean13/${cleanEan}`;
+          }
+          if (/^\d{8}$/.test(cleanEan)) {
+            return `https://barcodeapi.org/api/ean8/${cleanEan}`;
+          }
+          if (/^\d{12}$/.test(cleanEan)) {
+            return `https://barcodeapi.org/api/upca/${cleanEan}`;
+          }
+          return `https://barcodeapi.org/api/128/${encodeURIComponent(ean)}`;
+        },
+
+        async copyToClipboard(text) {
+          try {
+            await navigator.clipboard.writeText(text);
+            TelegramWebApp.hapticNotification("success");
+          } catch {
+            TelegramWebApp.hapticNotification("error");
+          }
+        },
+
+        clearAll() {
+          TelegramWebApp.showConfirm(
+            "Очистить все отсканированные коды?",
+            (confirmed) => {
+              if (confirmed) {
+                this.scannedItems = [];
+                this.foundCodes.clear();
+                TelegramWebApp.hapticImpact("medium");
+              }
+            }
+          );
+        },
+      }));
+
+      Alpine.start();
+    </script>
+  </body>
 </html>
