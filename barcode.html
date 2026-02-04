@@ -1,1 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Sheet Scanner God Mode</title>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+
+<style>
+  main { text-align:center }
+
+  .scanner {
+    position:relative;
+    max-width:900px;
+    margin:1rem auto;
+  }
+
+  video {
+    width:100%;
+    border-radius:12px;
+    display:block;
+  }
+
+  .overlay {
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+  }
+
+  .frame {
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:62%;
+    aspect-ratio:1 / 1.41421356;
+    transform:translate(-50%,-50%);
+    border:2px solid rgba(0,255,0,.7);
+    border-radius:10px;
+    transition:.15s;
+  }
+
+  .frame.flash {
+    border-color:#00ff00;
+    box-shadow:0 0 20px rgba(0,255,0,.6);
+  }
+
+  button { width:100% }
+
+  article {
+    margin-top:2rem;
+    padding-top:1rem;
+    border-top:1px solid var(--pico-muted-border-color);
+  }
+
+  img {
+    width:100%;
+    height:120px;
+    object-fit:contain;
+    margin-top:.5rem;
+  }
+
+  code { font-size:.9rem }
+</style>
+</head>
+
+<body>
+<main class="container"
+  x-data="scanner()"
+  x-init="init()"
+>
+  <h1>Live Sheet Scanner</h1>
+
+  <div class="scanner" x-ref="scanner">
+    <video x-ref="video" autoplay playsinline></video>
+    <div class="overlay">
+      <div class="frame" :class="{ flash: flash }"></div>
+    </div>
+  </div>
+
+  <button @click="toggle" x-text="active ? 'Stop' : 'Start'"></button>
+
+  <template x-for="ean in eans" :key="ean">
+    <article>
+      <h3 x-text="ean"></h3>
+      <img :src="qr(ean)" loading="lazy">
+      <img :src="barcode(ean)" loading="lazy">
+    </article>
+  </template>
+</main>
+
+<script type="module">
+import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3/dist/module.esm.js'
+import {
+  BrowserMultiFormatReader,
+  BarcodeFormat,
+  DecodeHintType
+} from 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.2/+esm'
+
+window.Alpine = Alpine
+
+Alpine.data('scanner', () => ({
+  FPS: 10,
+  COOLDOWN: 600,
+  FRAME_SCALE: 0.62,
+
+  active:false,
+  stream:null,
+  reader:null,
+  canvas:null,
+  ctx:null,
+
+  lastFrame:0,
+  lastHit:0,
+  flash:false,
+
+  found:new Set(),
+  eans:[],
+
+  audio:null,
+
+  init() {
+    const hints = new Map()
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+      BarcodeFormat.QR_CODE,
+      BarcodeFormat.EAN_13
+    ])
+    hints.set(DecodeHintType.TRY_HARDER, true)
+
+    this.reader = new BrowserMultiFormatReader(hints)
+    this.canvas = new OffscreenCanvas(1,1)
+    this.ctx = this.canvas.getContext('2d',{ willReadFrequently:true })
+    this.audio = new AudioContext()
+  },
+
+  async startCamera() {
+    this.stream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:'environment' }
+    })
+
+    const track = this.stream.getVideoTracks()[0]
+    await track.applyConstraints({
+      focusMode:'continuous',
+      exposureMode:'continuous'
+    })
+
+    this.$refs.video.srcObject = this.stream
+    await this.$refs.video.play()
+  },
+
+  stopCamera() {
+    this.stream?.getTracks().forEach(t=>t.stop())
+    this.reader.reset()
+  },
+
+  async loop(ts) {
+    if (!this.active) return
+    if (ts - this.lastFrame < 1000 / this.FPS) {
+      requestAnimationFrame(this.loop.bind(this))
+      return
+    }
+    this.lastFrame = ts
+
+    const v = this.$refs.video
+    if (!v.videoWidth) {
+      requestAnimationFrame(this.loop.bind(this))
+      return
+    }
+
+    const rect = this.$refs.scanner.getBoundingClientRect()
+    const frame = this.$el.querySelector('.frame').getBoundingClientRect()
+
+    const sx = (frame.left - rect.left) / rect.width * v.videoWidth
+    const sy = (frame.top - rect.top) / rect.height * v.videoHeight
+    const sw = frame.width / rect.width * v.videoWidth
+    const sh = frame.height / rect.height * v.videoHeight
+
+    this.canvas.width = sw
+    this.canvas.height = sh
+    this.ctx.drawImage(v, sx, sy, sw, sh, 0, 0, sw, sh)
+
+    try {
+      const res = await this.reader.decodeFromCanvas(this.canvas)
+      this.hit(res.getText())
+    } catch {}
+
+    requestAnimationFrame(this.loop.bind(this))
+  },
+
+  hit(text) {
+    if (performance.now() - this.lastHit < this.COOLDOWN) return
+
+    const ean = text.includes(';') ? text.split(';')[1] : text
+    if (!/^\d{13}$/.test(ean)) return
+    if (this.found.has(ean)) return
+
+    this.lastHit = performance.now()
+    this.found.add(ean)
+    this.eans.push(ean)
+
+    this.feedback()
+  },
+
+  feedback() {
+    this.flash = true
+    setTimeout(()=>this.flash=false,120)
+
+    navigator.vibrate?.(60)
+
+    const o = this.audio.createOscillator()
+    const g = this.audio.createGain()
+    o.frequency.value = 880
+    g.gain.value = .08
+    o.connect(g).connect(this.audio.destination)
+    o.start()
+    o.stop(this.audio.currentTime + .07)
+  },
+
+  async toggle() {
+    if (this.active) {
+      this.active=false
+      this.stopCamera()
+      return
+    }
+    await this.startCamera()
+    this.active=true
+    requestAnimationFrame(this.loop.bind(this))
+  },
+
+  qr(e) {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${e}`
+  },
+
+  barcode(e) {
+    return `https://quickchart.io/barcode?type=ean13&text=${e}&width=600&height=120`
+  }
+}))
+
+Alpine.start()
+</script>
+</body>
+</html>
