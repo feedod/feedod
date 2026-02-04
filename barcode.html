@@ -1403,106 +1403,109 @@
 },
 
 async startCamera() {
-  const devices = await navigator.mediaDevices.enumerateDevices();
-  const videoDevices = devices.filter(d => d.kind === 'videoinput');
+  let stream = null;
   
-  let constraints = {
-    video: {
-      facingMode: { ideal: "environment" },
-      width: { ideal: 1920, min: 640 },
-      height: { ideal: 1080, min: 480 },
+  const constraints = [
+    {
+      video: {
+        facingMode: { exact: "environment" },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+      },
+      audio: false,
     },
-    audio: false,
-  };
-  
-  const backCamera = videoDevices.find(d => 
-    d.label.toLowerCase().includes('back') || 
-    d.label.toLowerCase().includes('rear') ||
-    d.label.toLowerCase().includes('environment')
-  );
-  
-  if (backCamera && backCamera.deviceId) {
-    constraints.video = {
-      deviceId: { exact: backCamera.deviceId },
-      width: { ideal: 1920, min: 640 },
-      height: { ideal: 1080, min: 480 },
-    };
-  }
-
-  try {
-    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-  } catch (e) {
-    this.stream = await navigator.mediaDevices.getUserMedia({
+    {
+      video: {
+        facingMode: "environment",
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+      audio: false,
+    },
+    {
       video: true,
       audio: false,
-    });
-  }
+    },
+  ];
 
-  const track = this.stream.getVideoTracks()[0];
-  
-  if (!track) {
-    throw new Error("No video track");
-  }
-
-  const capabilities = track.getCapabilities?.() || {};
-  this.hasTorch = !!capabilities.torch;
-
-  const advancedConstraints = {};
-  if (capabilities.focusMode?.includes("continuous")) {
-    advancedConstraints.focusMode = "continuous";
-  }
-  if (capabilities.exposureMode?.includes("continuous")) {
-    advancedConstraints.exposureMode = "continuous";
-  }
-
-  if (Object.keys(advancedConstraints).length > 0) {
+  for (const constraint of constraints) {
     try {
-      await track.applyConstraints({
-        advanced: [advancedConstraints],
-      });
-    } catch {}
+      stream = await navigator.mediaDevices.getUserMedia(constraint);
+      break;
+    } catch (e) {
+      continue;
+    }
   }
 
-  await this.$nextTick();
+  if (!stream) {
+    throw new Error("Camera not available");
+  }
+
+  this.stream = stream;
+  const track = stream.getVideoTracks()[0];
+
+  if (track) {
+    const capabilities = track.getCapabilities?.() || {};
+    this.hasTorch = !!capabilities.torch;
+
+    if (capabilities.focusMode?.includes("continuous")) {
+      try {
+        await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
+      } catch {}
+    }
+  }
 
   const video = this.$refs.videoElement;
-  if (video) {
-    video.srcObject = this.stream;
-    video.setAttribute('autoplay', '');
-    video.setAttribute('playsinline', '');
-    video.setAttribute('webkit-playsinline', '');
-    video.setAttribute('muted', '');
-    video.muted = true;
-    video.playsInline = true;
-    
-    await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('Video timeout')), 10000);
-      video.onloadedmetadata = () => {
-        clearTimeout(timeout);
-        resolve();
-      };
-      video.onerror = (e) => {
-        clearTimeout(timeout);
-        reject(e);
-      };
-    });
-    
-    try {
-      await video.play();
-    } catch (playError) {
-      const playOnInteraction = async () => {
-        try {
-          await video.play();
-          document.removeEventListener('touchstart', playOnInteraction);
-          document.removeEventListener('click', playOnInteraction);
-        } catch {}
-      };
-      document.addEventListener('touchstart', playOnInteraction, { once: true });
-      document.addEventListener('click', playOnInteraction, { once: true });
-    }
-    
-    this.startScanning();
+  
+  if (!video) {
+    throw new Error("Video element not found");
   }
+
+  video.setAttribute("autoplay", "");
+  video.setAttribute("playsinline", "");
+  video.setAttribute("webkit-playsinline", "");
+  video.setAttribute("muted", "");
+  video.muted = true;
+  video.playsInline = true;
+  video.autoplay = true;
+
+  video.srcObject = stream;
+
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => resolve(), 5000);
+    
+    video.onloadedmetadata = () => {
+      clearTimeout(timeout);
+      resolve();
+    };
+    
+    video.oncanplay = () => {
+      clearTimeout(timeout);
+      resolve();
+    };
+    
+    video.onerror = () => {
+      clearTimeout(timeout);
+      reject(new Error("Video error"));
+    };
+  });
+
+  const playVideo = async () => {
+    try {
+      if (video.paused) {
+        await video.play();
+      }
+    } catch {}
+  };
+
+  await playVideo();
+
+  if (video.paused) {
+    document.addEventListener("touchstart", playVideo, { once: true });
+    document.addEventListener("click", playVideo, { once: true });
+  }
+
+  this.startScanning();
 },
 
         stopCamera() {
