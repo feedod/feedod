@@ -1417,8 +1417,6 @@ async startCamera() {
     {
       video: {
         facingMode: "environment",
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
       },
       audio: false,
     },
@@ -1447,12 +1445,6 @@ async startCamera() {
   if (track) {
     const capabilities = track.getCapabilities?.() || {};
     this.hasTorch = !!capabilities.torch;
-
-    if (capabilities.focusMode?.includes("continuous")) {
-      try {
-        await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
-      } catch {}
-    }
   }
 
   const video = this.$refs.videoElement;
@@ -1461,48 +1453,75 @@ async startCamera() {
     throw new Error("Video element not found");
   }
 
-  video.setAttribute("autoplay", "");
-  video.setAttribute("playsinline", "");
-  video.setAttribute("webkit-playsinline", "");
-  video.setAttribute("muted", "");
+  video.style.opacity = "1";
+  video.style.visibility = "visible";
+  video.style.display = "block";
+  video.style.objectFit = "cover";
+  video.style.width = "100%";
+  video.style.height = "100%";
+  video.style.transform = "translateZ(0)";
+  video.style.webkitTransform = "translateZ(0)";
+  
+  video.removeAttribute("src");
+  video.load();
+  
   video.muted = true;
   video.playsInline = true;
   video.autoplay = true;
+  video.controls = false;
+  
+  video.setAttribute("autoplay", "true");
+  video.setAttribute("playsinline", "true");
+  video.setAttribute("webkit-playsinline", "true");
+  video.setAttribute("muted", "true");
+  video.setAttribute("x5-playsinline", "true");
+  video.setAttribute("x5-video-player-type", "h5");
+  video.setAttribute("x5-video-player-fullscreen", "false");
 
   video.srcObject = stream;
 
-  await new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => resolve(), 5000);
+  await new Promise((resolve) => {
+    let resolved = false;
     
-    video.onloadedmetadata = () => {
-      clearTimeout(timeout);
-      resolve();
+    const done = () => {
+      if (!resolved) {
+        resolved = true;
+        resolve();
+      }
     };
+
+    video.onloadedmetadata = done;
+    video.onloadeddata = done;
+    video.oncanplay = done;
+    video.oncanplaythrough = done;
     
-    video.oncanplay = () => {
-      clearTimeout(timeout);
-      resolve();
-    };
-    
-    video.onerror = () => {
-      clearTimeout(timeout);
-      reject(new Error("Video error"));
-    };
+    setTimeout(done, 3000);
   });
 
-  const playVideo = async () => {
+  for (let i = 0; i < 3; i++) {
     try {
       if (video.paused) {
-        await video.play();
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          await playPromise;
+        }
       }
-    } catch {}
-  };
-
-  await playVideo();
+      break;
+    } catch (e) {
+      await new Promise(r => setTimeout(r, 200));
+    }
+  }
 
   if (video.paused) {
-    document.addEventListener("touchstart", playVideo, { once: true });
-    document.addEventListener("click", playVideo, { once: true });
+    const playOnTouch = async () => {
+      try {
+        await video.play();
+      } catch {}
+      document.removeEventListener("touchstart", playOnTouch);
+      document.removeEventListener("click", playOnTouch);
+    };
+    document.addEventListener("touchstart", playOnTouch);
+    document.addEventListener("click", playOnTouch);
   }
 
   this.startScanning();
