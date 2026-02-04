@@ -455,30 +455,27 @@
     </template>
 
     <template x-if="appState === 'scanner'">
-      <main class="mx-auto flex w-full max-w-lg flex-1 flex-col">
-        <header class="fade-in px-4 pb-4 pt-6 text-center">
-          <h1 class="text-lg font-semibold text-text">Сканер ценников</h1>
-          <p class="mt-1 text-sm text-muted" x-text="statusMessage"></p>
-        </header
+  <main class="mx-auto flex w-full max-w-lg flex-1 flex-col">
+    <header class="fade-in px-4 pb-4 pt-6 text-center">
+      <h1 class="text-lg font-semibold text-text">Сканер ценников</h1>
+      <p class="mt-1 text-sm text-muted" x-text="statusMessage"></p>
+    </header>
 
-        <section class="fade-in px-4" style="animation-delay: 50ms">
-          <div
-            x-ref="scannerContainer"
-            class="relative overflow-hidden rounded-3xl bg-black"
-            :style="{ height: scannerHeight + 'px' }"
-            style="
-              box-shadow:
-                0 0 0 1px rgba(255, 255, 255, 0.1),
-                0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            "
-          >
-            <video
-              x-ref="videoElement"
-              autoplay
-              playsinline
-              muted
-              class="absolute inset-0 h-full w-full object-cover"
-            ></video>
+    <section class="fade-in px-4" style="animation-delay: 50ms">
+      <div
+        x-ref="scannerContainer"
+        class="relative overflow-hidden rounded-3xl bg-black"
+        :style="{ height: scannerHeight + 'px' }"
+      >
+        <video
+          x-ref="videoElement"
+          autoplay
+          playsinline
+          webkit-playsinline
+          muted
+          class="absolute inset-0 h-full w-full object-cover"
+          style="z-index: 1; background: #000;"
+        ></video>
 
             <div class="pointer-events-none absolute inset-0">
               <div
@@ -1403,27 +1400,15 @@
 },
 
 async startCamera() {
+  await this.$nextTick();
+  await new Promise(r => setTimeout(r, 100));
+  
   let stream = null;
   
   const constraints = [
-    {
-      video: {
-        facingMode: { exact: "environment" },
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-      },
-      audio: false,
-    },
-    {
-      video: {
-        facingMode: "environment",
-      },
-      audio: false,
-    },
-    {
-      video: true,
-      audio: false,
-    },
+    { video: { facingMode: { exact: "environment" } }, audio: false },
+    { video: { facingMode: "environment" }, audio: false },
+    { video: true, audio: false },
   ];
 
   for (const constraint of constraints) {
@@ -1440,88 +1425,49 @@ async startCamera() {
   }
 
   this.stream = stream;
+  
   const track = stream.getVideoTracks()[0];
-
   if (track) {
     const capabilities = track.getCapabilities?.() || {};
     this.hasTorch = !!capabilities.torch;
   }
 
-  const video = this.$refs.videoElement;
+  let video = this.$refs.videoElement;
+  
+  if (!video) {
+    await this.$nextTick();
+    await new Promise(r => setTimeout(r, 100));
+    video = this.$refs.videoElement;
+  }
+  
+  if (!video) {
+    video = document.querySelector('video');
+  }
   
   if (!video) {
     throw new Error("Video element not found");
   }
 
-  video.style.opacity = "1";
-  video.style.visibility = "visible";
-  video.style.display = "block";
-  video.style.objectFit = "cover";
-  video.style.width = "100%";
-  video.style.height = "100%";
-  video.style.transform = "translateZ(0)";
-  video.style.webkitTransform = "translateZ(0)";
-  
-  video.removeAttribute("src");
+  video.srcObject = null;
   video.load();
   
   video.muted = true;
   video.playsInline = true;
   video.autoplay = true;
-  video.controls = false;
   
-  video.setAttribute("autoplay", "true");
-  video.setAttribute("playsinline", "true");
-  video.setAttribute("webkit-playsinline", "true");
-  video.setAttribute("muted", "true");
-  video.setAttribute("x5-playsinline", "true");
-  video.setAttribute("x5-video-player-type", "h5");
-  video.setAttribute("x5-video-player-fullscreen", "false");
-
   video.srcObject = stream;
 
   await new Promise((resolve) => {
-    let resolved = false;
-    
-    const done = () => {
-      if (!resolved) {
-        resolved = true;
-        resolve();
-      }
-    };
-
+    const done = () => resolve();
     video.onloadedmetadata = done;
-    video.onloadeddata = done;
-    video.oncanplay = done;
-    video.oncanplaythrough = done;
-    
-    setTimeout(done, 3000);
+    setTimeout(done, 2000);
   });
 
-  for (let i = 0; i < 3; i++) {
-    try {
-      if (video.paused) {
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-          await playPromise;
-        }
-      }
-      break;
-    } catch (e) {
-      await new Promise(r => setTimeout(r, 200));
-    }
-  }
-
-  if (video.paused) {
-    const playOnTouch = async () => {
-      try {
-        await video.play();
-      } catch {}
-      document.removeEventListener("touchstart", playOnTouch);
-      document.removeEventListener("click", playOnTouch);
-    };
-    document.addEventListener("touchstart", playOnTouch);
-    document.addEventListener("click", playOnTouch);
+  try {
+    await video.play();
+  } catch (e) {
+    document.addEventListener("click", () => video.play(), { once: true });
+    document.addEventListener("touchstart", () => video.play(), { once: true });
   }
 
   this.startScanning();
