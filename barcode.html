@@ -11,20 +11,25 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style type="text/tailwindcss">
       @theme {
-        --color-bg: #09090b;
-        --color-surface: #18181b;
-        --color-surface-elevated: #27272a;
-        --color-border: #3f3f46;
-        --color-text: #fafafa;
-        --color-muted: #a1a1aa;
-        --color-success: #22c55e;
-        --color-error: #ef4444;
-        --color-accent: #3b82f6;
+        --color-bg: #000000;
+        --color-surface: #1c1c1e;
+        --color-surface-elevated: #2c2c2e;
+        --color-surface-tertiary: #3a3a3c;
+        --color-border: #38383a;
+        --color-text: #ffffff;
+        --color-text-secondary: #ebebf5;
+        --color-muted: #8e8e93;
+        --color-success: #30d158;
+        --color-error: #ff453a;
+        --color-warning: #ff9f0a;
+        --color-accent: #0a84ff;
+        --color-tint: #64d2ff;
       }
 
       * {
         -webkit-tap-highlight-color: transparent;
         -webkit-touch-callout: none;
+        box-sizing: border-box;
       }
 
       html,
@@ -33,28 +38,35 @@
         font-family:
           -apple-system,
           BlinkMacSystemFont,
+          "SF Pro Display",
           "SF Pro Text",
           system-ui,
           sans-serif;
         overscroll-behavior: none;
         -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
         scrollbar-width: none;
+        margin: 0;
+        padding: 0;
       }
 
       html::-webkit-scrollbar,
-      body::-webkit-scrollbar {
+      body::-webkit-scrollbar,
+      *::-webkit-scrollbar {
         display: none;
       }
 
       body {
-        padding: env(safe-area-inset-top) env(safe-area-inset-right)
-          env(safe-area-inset-bottom) env(safe-area-inset-left);
+        padding-top: env(safe-area-inset-top);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
       }
 
       @keyframes fadeIn {
         from {
           opacity: 0;
-          transform: translateY(16px);
+          transform: translateY(12px);
         }
         to {
           opacity: 1;
@@ -62,77 +74,242 @@
         }
       }
 
+      @keyframes fadeInScale {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
       @keyframes scan {
-        0% {
+        0%,
+        100% {
           top: 0;
+          opacity: 0.8;
+        }
+        50% {
+          top: calc(100% - 2px);
           opacity: 1;
         }
-        45% {
-          top: calc(100% - 3px);
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
           opacity: 1;
         }
         50% {
-          top: calc(100% - 3px);
-          opacity: 0.3;
-        }
-        55% {
-          top: calc(100% - 3px);
-          opacity: 1;
-        }
-        100% {
-          top: 0;
-          opacity: 1;
+          opacity: 0.5;
         }
       }
 
-      @keyframes successPulse {
+      @keyframes successFlash {
         0% {
-          box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+          border-color: rgba(48, 209, 88, 1);
+          box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.5);
         }
-        70% {
-          box-shadow: 0 0 0 12px rgba(34, 197, 94, 0);
+        50% {
+          box-shadow: 0 0 0 8px rgba(48, 209, 88, 0);
         }
         100% {
-          box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+          border-color: rgba(255, 255, 255, 0.3);
+          box-shadow: 0 0 0 0 rgba(48, 209, 88, 0);
         }
       }
 
-      @keyframes shimmer {
-        0% {
-          background-position: -200% 0;
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
         }
-        100% {
-          background-position: 200% 0;
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
       }
 
-      .fade {
-        animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20%,
+        60% {
+          transform: translateX(-4px);
+        }
+        40%,
+        80% {
+          transform: translateX(4px);
+        }
+      }
+
+      .fade-in {
+        animation: fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      }
+
+      .fade-in-scale {
+        animation: fadeInScale 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+          forwards;
+      }
+
+      .slide-up {
+        animation: slideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
       }
 
       .scan-line {
-        animation: scan 2.5s ease-in-out infinite;
+        animation: scan 2s ease-in-out infinite;
       }
 
-      .success-pulse {
-        animation: successPulse 0.6s ease-out;
+      .pulse {
+        animation: pulse 2s ease-in-out infinite;
       }
 
-      .shimmer {
+      .success-flash {
+        animation: successFlash 0.5s ease-out forwards;
+      }
+
+      .shake {
+        animation: shake 0.4s ease-in-out;
+      }
+
+      .glass {
+        background: rgba(28, 28, 30, 0.85);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+      }
+
+      .glass-light {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+
+      .btn-primary {
+        background: linear-gradient(180deg, #34c759 0%, #30d158 100%);
+        box-shadow:
+          0 1px 0 0 rgba(255, 255, 255, 0.2) inset,
+          0 4px 12px rgba(48, 209, 88, 0.3);
+      }
+
+      .btn-primary:active {
+        transform: scale(0.98);
+        box-shadow:
+          0 1px 0 0 rgba(255, 255, 255, 0.2) inset,
+          0 2px 6px rgba(48, 209, 88, 0.2);
+      }
+
+      .card {
+        background: linear-gradient(
+          180deg,
+          rgba(44, 44, 46, 1) 0%,
+          rgba(28, 28, 30, 1) 100%
+        );
+        border: 0.5px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .scanner-frame {
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+      }
+
+      .scanner-frame.active {
+        border-color: rgba(48, 209, 88, 1);
+      }
+
+      .corner {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        border-color: #ffffff;
+        border-style: solid;
+        border-width: 0;
+        transition: border-color 0.3s ease;
+      }
+
+      .corner.active {
+        border-color: #30d158;
+      }
+
+      .corner-tl {
+        top: -1px;
+        left: -1px;
+        border-top-width: 3px;
+        border-left-width: 3px;
+        border-top-left-radius: 12px;
+      }
+
+      .corner-tr {
+        top: -1px;
+        right: -1px;
+        border-top-width: 3px;
+        border-right-width: 3px;
+        border-top-right-radius: 12px;
+      }
+
+      .corner-bl {
+        bottom: -1px;
+        left: -1px;
+        border-bottom-width: 3px;
+        border-left-width: 3px;
+        border-bottom-left-radius: 12px;
+      }
+
+      .corner-br {
+        bottom: -1px;
+        right: -1px;
+        border-bottom-width: 3px;
+        border-right-width: 3px;
+        border-bottom-right-radius: 12px;
+      }
+
+      .product-card {
+        background: #1c1c1e;
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
+      .price-tag {
+        background: linear-gradient(135deg, #ff9f0a 0%, #ff6b00 100%);
+        color: #000;
+        font-weight: 700;
+      }
+
+      .code-display {
+        font-family: "SF Mono", "Menlo", "Monaco", monospace;
+        letter-spacing: 0.5px;
+      }
+
+      .error-banner {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 69, 58, 0.15) 0%,
+          rgba(255, 69, 58, 0.05) 100%
+        );
+        border: 1px solid rgba(255, 69, 58, 0.3);
+      }
+
+      .loading-skeleton {
         background: linear-gradient(
           90deg,
-          transparent 0%,
+          rgba(255, 255, 255, 0.05) 0%,
           rgba(255, 255, 255, 0.1) 50%,
-          transparent 100%
+          rgba(255, 255, 255, 0.05) 100%
         );
         background-size: 200% 100%;
         animation: shimmer 1.5s infinite;
       }
 
-      .glass {
-        background: rgba(24, 24, 27, 0.8);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+      @keyframes shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
       }
     </style>
   </head>
@@ -142,16 +319,21 @@
     @beforeunload.window="destroy()"
     class="flex min-h-dvh flex-col select-none bg-bg text-text"
   >
-    <template x-if="cameraState === 'denied' || cameraState === 'prompt'">
+    <template x-if="appState === 'permission'">
       <main
-        class="fade mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-6"
+        class="fade-in mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-6"
       >
-        <div class="relative mb-8">
+        <div class="relative mb-10">
           <div
-            class="grid h-24 w-24 place-items-center rounded-3xl border border-border bg-gradient-to-br from-surface-elevated to-surface"
+            class="flex h-28 w-28 items-center justify-center rounded-[28px] bg-gradient-to-br from-surface-elevated to-surface"
+            style="
+              ## box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                0 20px 40px rgba(0, 0, 0, 0.4);
+            "
           >
             <svg
-              class="h-12 w-12 text-muted"
+              class="h-14 w-14 text-white opacity-90"
               fill="none"
               stroke="currentColor"
               stroke-width="1.5"
@@ -170,13 +352,13 @@
             </svg>
           </div>
           <div
-            class="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full border-2 border-bg bg-surface-elevated"
+            class="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-full border-4 border-bg bg-accent"
           >
             <svg
-              class="h-4 w-4 text-accent"
+              class="h-5 w-5 text-white"
               fill="none"
               stroke="currentColor"
-              stroke-width="2"
+              stroke-width="2.5"
               viewBox="0 0 24 24"
             >
               <path
@@ -188,18 +370,21 @@
           </div>
         </div>
 
-        <h1 class="mb-3 text-2xl font-bold tracking-tight">Доступ к камере</h1>
-        <p class="mb-10 max-w-xs text-center text-sm leading-relaxed text-muted">
-          Для сканирования документов необходим доступ к камере вашего
-          устройства
+        <h1 class="mb-3 text-center text-2xl font-bold tracking-tight">
+          Доступ к камере
+        </h1>
+        <p
+          class="mb-10 max-w-[280px] text-center text-[15px] leading-relaxed text-muted"
+        >
+          Для сканирования ценников необходим доступ к камере вашего устройства
         </p>
 
         <button
-          @click="requestCamera"
-          :disabled="isRequestingCamera"
-          class="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-success font-semibold text-white shadow-lg shadow-success/25 transition-all duration-100 ease-out active:scale-[0.98] disabled:opacity-50"
+          @click="requestCameraPermission"
+          :disabled="isLoading"
+          class="btn-primary flex h-[54px] w-full max-w-[280px] items-center justify-center gap-3 rounded-[14px] text-[17px] font-semibold text-white transition-all disabled:opacity-50"
         >
-          <template x-if="isRequestingCamera">
+          <template x-if="isLoading">
             <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle
                 class="opacity-25"
@@ -216,7 +401,7 @@
               ></path>
             </svg>
           </template>
-          <template x-if="!isRequestingCamera">
+          <template x-if="!isLoading">
             <svg
               class="h-5 w-5"
               fill="none"
@@ -231,35 +416,64 @@
               />
             </svg>
           </template>
-          <span
-            x-text="isRequestingCamera ? 'Запрос доступа...' : 'Разрешить камеру'"
-          ></span>
+          <span x-text="isLoading ? 'Запрос...' : 'Разрешить камеру'"></span>
         </button>
 
-        <p
-          x-show="cameraState === 'denied'"
-          x-transition
-          class="mt-6 rounded-xl bg-error/10 px-4 py-3 text-center text-sm text-error"
+        <div
+          x-show="permissionError"
+          x-transition:enter="fade-in"
+          class="error-banner mt-8 w-full max-w-[320px] rounded-2xl p-4"
         >
-          Доступ запрещён. Разрешите камеру в настройках браузера.
-        </p>
+          <div class="flex items-start gap-3">
+            <div
+              class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-error/20"
+            >
+              <svg
+                class="h-4 w-4 text-error"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                />
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-error">Доступ запрещён</p>
+              <p class="mt-1 text-xs leading-relaxed text-muted">
+                Разрешите доступ к камере в настройках браузера и обновите
+                страницу
+              </p>
+            </div>
+          </div>
+        </div>
       </main>
     </template>
 
-    <template x-if="cameraState === 'granted'">
-      <main class="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pb-8">
-        <header class="fade py-6 text-center">
-          <p class="text-sm text-muted" x-text="statusText"></p>
+    <template x-if="appState === 'scanner'">
+      <main class="mx-auto flex w-full max-w-lg flex-1 flex-col">
+        <header class="fade-in px-4 pb-4 pt-6 text-center">
+          <h1 class="text-lg font-semibold text-text">Сканер ценников</h1>
+          <p class="mt-1 text-sm text-muted" x-text="statusMessage"></p>
         </header>
 
-        <section class="fade" style="animation-delay: 50ms">
+        <section class="fade-in px-4" style="animation-delay: 50ms">
           <div
-            x-ref="scanner"
-            class="relative overflow-hidden rounded-3xl border border-border bg-black shadow-2xl"
+            x-ref="scannerContainer"
+            class="relative overflow-hidden rounded-3xl bg-black"
             :style="{ height: scannerHeight + 'px' }"
+            style="
+              ## box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            "
           >
             <video
-              x-ref="video"
+              x-ref="videoElement"
               autoplay
               playsinline
               muted
@@ -268,46 +482,46 @@
 
             <div class="pointer-events-none absolute inset-0">
               <div
-                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-200"
-                :class="{ 'success-pulse': isFlashing }"
+                class="scanner-frame absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl"
+                :class="{ 'success-flash': flashActive }"
                 :style="{
                   width: frameWidth + 'px',
-                  height: frameHeight + 'px',
-                  border: '2px solid ' + (isFlashing ? '#22c55e' : 'rgba(255,255,255,0.5)'),
-                  borderRadius: '16px',
-                  background: 'rgba(0,0,0,0.02)'
+                  height: frameHeight + 'px'
                 }"
               >
                 <div
-                  class="absolute -left-0.5 -top-0.5 h-8 w-8 rounded-tl-xl border-l-[3px] border-t-[3px]"
-                  :class="isFlashing ? 'border-success' : 'border-white'"
+                  class="corner corner-tl"
+                  :class="{ 'active': flashActive }"
                 ></div>
                 <div
-                  class="absolute -right-0.5 -top-0.5 h-8 w-8 rounded-tr-xl border-r-[3px] border-t-[3px]"
-                  :class="isFlashing ? 'border-success' : 'border-white'"
+                  class="corner corner-tr"
+                  :class="{ 'active': flashActive }"
                 ></div>
                 <div
-                  class="absolute -bottom-0.5 -left-0.5 h-8 w-8 rounded-bl-xl border-b-[3px] border-l-[3px]"
-                  :class="isFlashing ? 'border-success' : 'border-white'"
+                  class="corner corner-bl"
+                  :class="{ 'active': flashActive }"
                 ></div>
                 <div
-                  class="absolute -bottom-0.5 -right-0.5 h-8 w-8 rounded-br-xl border-b-[3px] border-r-[3px]"
-                  :class="isFlashing ? 'border-success' : 'border-white'"
+                  class="corner corner-br"
+                  :class="{ 'active': flashActive }"
                 ></div>
 
                 <div
-                  x-show="isScanning && !isFlashing"
-                  class="scan-line absolute left-2 right-2 h-0.5 rounded-full bg-gradient-to-r from-transparent via-success to-transparent shadow-lg shadow-success/50"
+                  x-show="scannerActive && !flashActive"
+                  class="scan-line absolute left-3 right-3 h-[2px] rounded-full bg-gradient-to-r from-transparent via-success to-transparent"
+                  style="box-shadow: 0 0 8px rgba(48, 209, 88, 0.6)"
                 ></div>
               </div>
             </div>
 
             <div
               x-show="scannedItems.length > 0"
-              x-transition
-              class="glass absolute right-3 top-3 flex items-center gap-2 rounded-full px-3 py-2"
+              x-transition:enter="fade-in-scale"
+              class="glass absolute right-4 top-4 flex items-center gap-2 rounded-full px-3 py-2"
             >
-              <div class="grid h-5 w-5 place-items-center rounded-full bg-success">
+              <div
+                class="flex h-5 w-5 items-center justify-center rounded-full bg-success"
+              >
                 <svg
                   class="h-3 w-3 text-white"
                   fill="none"
@@ -323,45 +537,70 @@
                 </svg>
               </div>
               <span
-                class="text-sm font-bold text-text"
+                class="text-sm font-bold text-white"
                 x-text="scannedItems.length"
               ></span>
             </div>
 
             <div
-              x-show="isScanning"
-              class="glass absolute bottom-3 left-3 flex items-center gap-2 rounded-full px-3 py-2"
+              x-show="scannerActive"
+              x-transition
+              class="glass absolute bottom-4 left-4 flex items-center gap-2 rounded-full px-3 py-2"
             >
-              <div class="h-2 w-2 animate-pulse rounded-full bg-success"></div>
-              <span class="text-xs font-medium text-text">Сканирование</span>
+              <div class="h-2 w-2 rounded-full bg-success pulse"></div>
+              <span class="text-xs font-medium text-white">Сканирование</span>
             </div>
+
+            <button
+              x-show="hasTorch"
+              @click="toggleTorch"
+              class="glass-light absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full transition-all active:scale-95"
+            >
+              <svg
+                class="h-5 w-5"
+                :class="torchOn ? 'text-warning' : 'text-white'"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"
+                />
+              </svg>
+            </button>
           </div>
         </section>
 
-        <template x-if="scannedItems.length > 0">
-          <section class="fade mt-6 space-y-4" style="animation-delay: 100ms">
-            <div class="flex items-center justify-between px-1">
-              <h2 class="text-sm font-semibold text-muted">
-                Найдено: <span class="text-text" x-text="scannedItems.length"></span>
-              </h2>
-              <button
-                @click="clearAll"
-                class="text-sm font-medium text-error transition-opacity active:opacity-60"
-              >
-                Очистить
-              </button>
-            </div>
-
-            <div class="space-y-3">
-              <template x-for="item in scannedItems" :key="item.id">
-                <div
-                  class="fade overflow-hidden rounded-2xl border border-border bg-surface"
+        <section class="flex-1 px-4 pb-8 pt-6">
+          <template x-if="scannedItems.length > 0">
+            <div class="slide-up">
+              <div class="mb-4 flex items-center justify-between">
+                <h2 class="text-sm font-semibold text-muted">
+                  Найдено:
+                  <span class="text-text" x-text="scannedItems.length"></span>
+                  <span
+                    class="text-text"
+                    x-text="pluralize(scannedItems.length, 'товар', 'товара', 'товаров')"
+                  ></span>
+                </h2>
+                <button
+                  @click="confirmClearAll"
+                  class="text-sm font-medium text-error transition-opacity active:opacity-60"
                 >
-                  <div class="p-4">
-                    <div class="mb-4 flex items-start justify-between">
+                  Очистить
+                </button>
+              </div>
+
+              <div class="space-y-3">
+                <template x-for="item in scannedItems" :key="item.id">
+                  <div class="product-card slide-up">
+                    <div class="flex items-start justify-between p-4 pb-3">
                       <div class="flex items-center gap-3">
                         <div
-                          class="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-success/15"
+                          class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-success/15"
                         >
                           <svg
                             class="h-5 w-5 text-success"
@@ -379,39 +618,125 @@
                         </div>
                         <div class="min-w-0">
                           <p
-                            class="truncate font-mono text-base font-bold text-text"
-                            x-text="item.ean"
+                            class="code-display truncate text-base font-bold text-text"
+                            x-text="item.code"
                           ></p>
                           <p class="text-xs text-muted" x-text="item.type"></p>
                         </div>
                       </div>
-                      <button
-                        @click="copyToClipboard(item.ean)"
-                        class="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-surface-elevated transition-all active:scale-95"
-                      >
-                        <svg
-                          class="h-5 w-5 text-muted"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="1.5"
-                          viewBox="0 0 24 24"
+
+                      <div class="flex gap-2">
+                        <button
+                          @click="copyCode(item.code)"
+                          class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-elevated transition-all active:scale-95"
+                          title="Копировать"
                         >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9.75a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184"
-                          />
-                        </svg>
-                      </button>
+                          <svg
+                            class="h-5 w-5 text-muted"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          @click="removeItem(item.id)"
+                          class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-elevated transition-all active:scale-95"
+                          title="Удалить"
+                        >
+                          <svg
+                            class="h-5 w-5 text-error"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <template x-if="item.productInfo">
+                      <div class="border-t border-border/50 px-4 py-3">
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <p
+                              class="text-sm font-medium text-text"
+                              x-text="item.productInfo.name"
+                            ></p>
+                            <p
+                              class="mt-0.5 text-xs text-muted"
+                              x-text="item.productInfo.weight"
+                            ></p>
+                          </div>
+                          <div
+                            class="price-tag rounded-lg px-3 py-1.5 text-lg"
+                            x-text="item.productInfo.price + ' ₽'"
+                          ></div>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template x-if="item.notFound">
+                      <div class="border-t border-border/50 px-4 py-3">
+                        <div
+                          class="flex items-center gap-2 text-sm text-warning"
+                        >
+                          <svg
+                            class="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                            />
+                          </svg>
+                          <span>Товар не найден в базе данных</span>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template x-if="item.loading">
+                      <div class="border-t border-border/50 px-4 py-3">
+                        <div class="flex items-center justify-between">
+                          <div class="flex-1">
+                            <div
+                              class="loading-skeleton h-4 w-3/4 rounded bg-surface-elevated"
+                            ></div>
+                            <div
+                              class="loading-skeleton mt-2 h-3 w-1/2 rounded bg-surface-elevated"
+                            ></div>
+                          </div>
+                          <div
+                            class="loading-skeleton h-8 w-16 rounded-lg bg-surface-elevated"
+                          ></div>
+                        </div>
+                      </div>
+                    </template>
+
+                    <div class="grid grid-cols-2 gap-3 p-4 pt-0">
                       <div class="rounded-xl bg-white p-3">
                         <img
-                          :src="getQrUrl(item.ean)"
-                          :alt="'QR: ' + item.ean"
+                          :src="generateQrUrl(item.code)"
+                          :alt="'QR: ' + item.code"
                           class="mx-auto h-20 w-20 object-contain"
                           loading="lazy"
+                          @error="handleImageError($event)"
                         />
                         <p
                           class="mt-2 text-center text-xs font-medium text-neutral-600"
@@ -421,55 +746,88 @@
                       </div>
                       <div class="rounded-xl bg-white p-3">
                         <img
-                          :src="getBarcodeUrl(item.ean)"
-                          :alt="'Barcode: ' + item.ean"
+                          :src="generateBarcodeUrl(item.code)"
+                          :alt="'Barcode: ' + item.code"
                           class="mx-auto h-20 w-full object-contain"
                           loading="lazy"
+                          @error="handleImageError($event)"
                         />
                         <p
                           class="mt-2 text-center text-xs font-medium text-neutral-600"
                         >
-                          Barcode
+                          Штрих-код
                         </p>
                       </div>
                     </div>
                   </div>
-                </div>
-              </template>
+                </template>
+              </div>
             </div>
-          </section>
-        </template>
+          </template>
 
-        <template x-if="scannedItems.length === 0 && isScanning">
-          <section
-            class="fade mt-8 rounded-2xl border border-border bg-surface p-8 text-center"
-            style="animation-delay: 100ms"
-          >
+          <template x-if="scannedItems.length === 0 && scannerActive">
             <div
-              class="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-surface-elevated"
+              class="fade-in mt-4 rounded-2xl border border-border bg-surface p-8 text-center"
             >
-              <svg
-                class="h-8 w-8 text-muted"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                viewBox="0 0 24 24"
+              <div
+                class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-elevated"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"
-                />
-              </svg>
+                <svg
+                  class="h-8 w-8 text-muted"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M13.5 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5Z"
+                  />
+                </svg>
+              </div>
+              <p class="font-semibold text-text">Наведите на ценник</p>
+              <p class="mt-1 text-sm text-muted">
+                Расположите ценник в рамке сканера
+              </p>
             </div>
-            <p class="font-semibold text-text">Наведите на документ</p>
-            <p class="mt-1 text-sm text-muted">
-              Расположите лист A4 в рамке сканера
-            </p>
-          </section>
-        </template>
+          </template>
+        </section>
       </main>
     </template>
+
+    <div
+      x-show="showCopyToast"
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 translate-y-4"
+      x-transition:enter-end="opacity-1 translate-y-0"
+      x-transition:leave="transition ease-in duration-150"
+      x-transition:leave-start="opacity-1 translate-y-0"
+      x-transition:leave-end="opacity-0 translate-y-4"
+      class="glass fixed bottom-8 left-1/2 z-50 -translate-x-1/2 rounded-full px-5 py-3"
+    >
+      <div class="flex items-center gap-2">
+        <svg
+          class="h-5 w-5 text-success"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="m4.5 12.75 6 6 9-13.5"
+          />
+        </svg>
+        <span class="text-sm font-medium text-white">Скопировано</span>
+      </div>
+    </div>
 
     <script type="module">
       import Alpine from "https://cdn.jsdelivr.net/npm/alpinejs@3/dist/module.esm.js";
@@ -479,46 +837,355 @@
         DecodeHintType,
       } from "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/+esm";
 
-      class TelegramWebApp {
-        static get instance() {
+      const PRODUCT_DATABASE = {
+        // Чипсы и снеки
+        "4607065370015": {
+          name: "Чипсы Московская картошка",
+          weight: "130г",
+          price: "119.99",
+        },
+        "4607065370022": {
+          name: "Чипсы Русская картошка",
+          weight: "80г",
+          price: "59.99",
+        },
+        "4607065370039": {
+          name: "Чипсы Lay's со вкусом сметаны",
+          weight: "140г",
+          price: "164.99",
+        },
+        "4607065370046": {
+          name: "Чипсы Pringles Original",
+          weight: "165г",
+          price: "192.99",
+        },
+        "4607065370053": {
+          name: "Кукурузные палочки",
+          weight: "100г",
+          price: "42.99",
+        },
+        "4607065370060": {
+          name: "Сухарики Кириешки",
+          weight: "100г",
+          price: "62.99",
+        },
+        "4607065370077": {
+          name: "Крекер TUC Original",
+          weight: "100г",
+          price: "73.99",
+        },
+        "4607065370084": {
+          name: "Сухарики с чесноком",
+          weight: "100г",
+          price: "84.99",
+        },
+        "4607065370091": {
+          name: "Чипсы Pringles Cheese",
+          weight: "165г",
+          price: "192.99",
+        },
+        "4607065370107": {
+          name: "Чипсы Just Brutal",
+          weight: "85г",
+          price: "62.99",
+        },
+        "4607065370114": {
+          name: "Сухарики Flint",
+          weight: "70г",
+          price: "46.99",
+        },
+        "4607065370121": {
+          name: "Чипсы Lorenz Naturals",
+          weight: "100г",
+          price: "115.49",
+        },
+        "4607065370138": {
+          name: "Чипсы Estrella",
+          weight: "125г",
+          price: "119.99",
+        },
+
+        // Колбасы и мясо
+        "4607065370145": {
+          name: "Колбаса Докторская",
+          weight: "400г",
+          price: "199.89",
+        },
+        "4607065370152": {
+          name: "Колбаса Краковская",
+          weight: "300г",
+          price: "39.99",
+        },
+        "4607065370169": {
+          name: "Сосиски Молочные",
+          weight: "500г",
+          price: "148.99",
+        },
+        "4607065370176": {
+          name: "Колбаса сырокопчёная",
+          weight: "200г",
+          price: "92.99",
+        },
+        "4607065370183": {
+          name: "Котлеты домашние",
+          weight: "400г",
+          price: "46.89",
+        },
+        "4607065370190": {
+          name: "Сардельки говяжьи",
+          weight: "450г",
+          price: "115.49",
+        },
+
+        // Молочные продукты
+        "4607065370206": {
+          name: "Сыр Российский",
+          weight: "200г",
+          price: "72.99",
+        },
+        "4607065370213": {
+          name: "Сметана 20%",
+          weight: "300г",
+          price: "69.99",
+        },
+        "4607065370220": {
+          name: "Творог 9%",
+          weight: "200г",
+          price: "49.99",
+        },
+        "4607065370237": {
+          name: "Кефир 2.5%",
+          weight: "900мл",
+          price: "94.99",
+        },
+        "4607065370244": {
+          name: "Молоко 3.2%",
+          weight: "1л",
+          price: "79.99",
+        },
+        "4607065370251": {
+          name: "Йогурт питьевой",
+          weight: "290г",
+          price: "29.99",
+        },
+
+        // Хлеб и выпечка
+        "4607065370268": {
+          name: "Батон нарезной",
+          weight: "400г",
+          price: "32.99",
+        },
+        "4607065370275": {
+          name: "Хлеб Бородинский",
+          weight: "500г",
+          price: "59.89",
+        },
+        "4607065370282": {
+          name: "Булочки сдобные",
+          weight: "5шт",
+          price: "26.99",
+        },
+
+        // Напитки
+        "4607065370299": {
+          name: "Сок апельсиновый",
+          weight: "1л",
+          price: "89.99",
+        },
+        "4607065370305": {
+          name: "Вода минеральная",
+          weight: "1.5л",
+          price: "24.99",
+        },
+
+        // Соусы и приправы
+        "4607065370312": {
+          name: "Соломка солёная",
+          weight: "100г",
+          price: "24.89",
+        },
+        "4607065370329": {
+          name: "Сухарики ржаные",
+          weight: "100г",
+          price: "18.99",
+        },
+
+        // Орехи
+        "4607065370336": {
+          name: "Кедровый орех",
+          weight: "100г",
+          price: "199.89",
+        },
+        "4607065370343": {
+          name: "Грецкие орехи",
+          weight: "150г",
+          price: "84.79",
+        },
+        "4607065370350": {
+          name: "Арахис жареный",
+          weight: "200г",
+          price: "68.69",
+        },
+
+        // Дополнительные товары с фото
+        "4607065370367": {
+          name: "Чипсы Lay's Сметана и лук",
+          weight: "140г",
+          price: "164.99",
+        },
+        "4607065370374": {
+          name: "Сухарики Воронцовские",
+          weight: "80г",
+          price: "26.99",
+        },
+        "4607065370381": {
+          name: "Чипсы Русская картошка грибы",
+          weight: "80г",
+          price: "42.99",
+        },
+        "4607065370398": {
+          name: "Колбаса Кальяри",
+          weight: "250г",
+          price: "62.99",
+        },
+      };
+
+      class TelegramApp {
+        static get tg() {
           return window.Telegram?.WebApp;
         }
 
-        static initialize() {
-          const app = this.instance;
-          if (!app) return;
+        static init() {
+          const tg = this.tg;
+          if (!tg) return;
 
           try {
-            app.ready();
-            app.requestFullscreen?.();
-            app.disableVerticalSwipes?.();
-            app.setHeaderColor?.("#09090b");
-            app.setBackgroundColor?.("#09090b");
-          } catch (err) {
-            console.error("[TelegramWebApp]", err);
+            tg.ready();
+            if (typeof tg.requestFullscreen === "function") {
+              tg.requestFullscreen();
+            }
+            if (typeof tg.disableVerticalSwipes === "function") {
+              tg.disableVerticalSwipes();
+            }
+            if (typeof tg.setHeaderColor === "function") {
+              tg.setHeaderColor("#000000");
+            }
+            if (typeof tg.setBackgroundColor === "function") {
+              tg.setBackgroundColor("#000000");
+            }
+          } catch (e) {
+            console.warn("[TelegramApp] Init error:", e);
           }
         }
 
         static hapticImpact(style = "light") {
           try {
-            this.instance?.HapticFeedback?.impactOccurred(style);
+            this.tg?.HapticFeedback?.impactOccurred?.(style);
           } catch {}
         }
 
-        static hapticNotification(type) {
+        static hapticNotification(type = "success") {
           try {
-            this.instance?.HapticFeedback?.notificationOccurred(type);
+            this.tg?.HapticFeedback?.notificationOccurred?.(type);
           } catch {}
         }
 
         static showConfirm(message, callback) {
           try {
-            if (this.instance?.showConfirm) {
-              this.instance.showConfirm(message, callback);
+            if (typeof this.tg?.showConfirm === "function") {
+              this.tg.showConfirm(message, callback);
               return;
             }
           } catch {}
           callback(confirm(message));
+        }
+
+        static showAlert(message) {
+          try {
+            if (typeof this.tg?.showAlert === "function") {
+              this.tg.showAlert(message);
+              return;
+            }
+          } catch {}
+          alert(message);
+        }
+      }
+
+      class AudioManager {
+        constructor() {
+          this.context = null;
+          this.initialized = false;
+        }
+
+        init() {
+          if (this.initialized) return;
+          try {
+            this.context = new (window.AudioContext ||
+              window.webkitAudioContext)();
+            this.initialized = true;
+          } catch (e) {
+            console.warn("[AudioManager] Failed to init:", e);
+          }
+        }
+
+        playSuccess() {
+          if (!this.context) return;
+
+          try {
+            if (this.context.state === "suspended") {
+              this.context.resume();
+            }
+
+            const osc = this.context.createOscillator();
+            const gain = this.context.createGain();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(880, this.context.currentTime);
+            osc.frequency.setValueAtTime(1320, this.context.currentTime + 0.08);
+
+            gain.gain.setValueAtTime(0.12, this.context.currentTime);
+            gain.gain.exponentialRampToValueAtTime(
+              0.001,
+              this.context.currentTime + 0.15
+            );
+
+            osc.connect(gain);
+            gain.connect(this.context.destination);
+
+            osc.start();
+            osc.stop(this.context.currentTime + 0.15);
+          } catch (e) {
+            console.warn("[AudioManager] Play error:", e);
+          }
+        }
+
+        playError() {
+          if (!this.context) return;
+
+          try {
+            if (this.context.state === "suspended") {
+              this.context.resume();
+            }
+
+            const osc = this.context.createOscillator();
+            const gain = this.context.createGain();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(300, this.context.currentTime);
+            osc.frequency.setValueAtTime(200, this.context.currentTime + 0.1);
+
+            gain.gain.setValueAtTime(0.1, this.context.currentTime);
+            gain.gain.exponentialRampToValueAtTime(
+              0.001,
+              this.context.currentTime + 0.2
+            );
+
+            osc.connect(gain);
+            gain.connect(this.context.destination);
+
+            osc.start();
+            osc.stop(this.context.currentTime + 0.2);
+          } catch {}
         }
       }
 
@@ -527,11 +1194,11 @@
           this.reader = null;
           this.canvas = null;
           this.ctx = null;
-          this.isRunning = false;
-          this.animationId = null;
+          this.isActive = false;
+          this.rafId = null;
           this.lastScanTime = 0;
-          this.scanCooldown = 800;
-          this.fps = 12;
+          this.scanCooldown = 1000;
+          this.frameInterval = 1000 / 10; // 10 FPS
           this.lastFrameTime = 0;
         }
 
@@ -547,6 +1214,7 @@
             BarcodeFormat.UPC_E,
             BarcodeFormat.DATA_MATRIX,
             BarcodeFormat.PDF_417,
+            BarcodeFormat.ITF,
           ]);
           hints.set(DecodeHintType.TRY_HARDER, true);
 
@@ -555,107 +1223,96 @@
           this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
         }
 
-        async decode(video, frameRect, scannerRect) {
-          if (!video.videoWidth || !video.videoHeight) return null;
-
-          const scaleX = video.videoWidth / scannerRect.width;
-          const scaleY = video.videoHeight / scannerRect.height;
-
-          const sx = Math.max(0, (frameRect.left - scannerRect.left) * scaleX);
-          const sy = Math.max(0, (frameRect.top - scannerRect.top) * scaleY);
-          const sw = Math.min(frameRect.width * scaleX, video.videoWidth - sx);
-          const sh = Math.min(
-            frameRect.height * scaleY,
-            video.videoHeight - sy
-          );
-
-          if (sw <= 0 || sh <= 0) return null;
-
-          this.canvas.width = sw;
-          this.canvas.height = sh;
-          this.ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
+        async decode(video, frameRect, containerRect) {
+          if (!video || !video.videoWidth || !video.videoHeight) {
+            return null;
+          }
 
           try {
+            const scaleX = video.videoWidth / containerRect.width;
+            const scaleY = video.videoHeight / containerRect.height;
+
+            const sx = Math.max(
+              0,
+              (frameRect.left - containerRect.left) * scaleX
+            );
+            const sy = Math.max(
+              0,
+              (frameRect.top - containerRect.top) * scaleY
+            );
+            const sw = Math.min(
+              frameRect.width * scaleX,
+              video.videoWidth - sx
+            );
+            const sh = Math.min(
+              frameRect.height * scaleY,
+              video.videoHeight - sy
+            );
+
+            if (sw <= 0 || sh <= 0) return null;
+
+            this.canvas.width = Math.floor(sw);
+            this.canvas.height = Math.floor(sh);
+
+            this.ctx.drawImage(
+              video,
+              sx,
+              sy,
+              sw,
+              sh,
+              0,
+              0,
+              this.canvas.width,
+              this.canvas.height
+            );
+
             const result = this.reader.decodeFromCanvas(this.canvas);
             return result?.getText() || null;
-          } catch {
+          } catch (e) {
             return null;
           }
         }
 
-        reset() {
-          this.isRunning = false;
-          if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-            this.animationId = null;
+        stop() {
+          this.isActive = false;
+          if (this.rafId) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
           }
-          this.reader?.reset();
-        }
-      }
-
-      class AudioFeedback {
-        constructor() {
-          this.context = null;
-        }
-
-        init() {
           try {
-            this.context = new (window.AudioContext ||
-              window.webkitAudioContext)();
-          } catch {}
-        }
-
-        playSuccess() {
-          if (!this.context) return;
-
-          try {
-            const oscillator = this.context.createOscillator();
-            const gain = this.context.createGain();
-
-            oscillator.type = "sine";
-            oscillator.frequency.setValueAtTime(880, this.context.currentTime);
-            oscillator.frequency.setValueAtTime(
-              1320,
-              this.context.currentTime + 0.08
-            );
-
-            gain.gain.setValueAtTime(0.15, this.context.currentTime);
-            gain.gain.exponentialRampToValueAtTime(
-              0.01,
-              this.context.currentTime + 0.15
-            );
-
-            oscillator.connect(gain);
-            gain.connect(this.context.destination);
-
-            oscillator.start();
-            oscillator.stop(this.context.currentTime + 0.15);
+            this.reader?.reset();
           } catch {}
         }
       }
 
       Alpine.data("ScannerApp", () => ({
-        cameraState: "prompt",
-        isRequestingCamera: false,
-        isScanning: false,
-        isFlashing: false,
-        scannedItems: [],
-        foundCodes: new Set(),
-        idCounter: 0,
+        appState: "permission",
+        isLoading: false,
+        permissionError: false,
+        scannerActive: false,
+        flashActive: false,
+        showCopyToast: false,
+        hasTorch: false,
+        torchOn: false,
 
-        stream: null,
-        scanner: new BarcodeScanner(),
-        audio: new AudioFeedback(),
+        scannedItems: [],
+        scannedCodes: new Set(),
+        itemIdCounter: 0,
 
         scannerHeight: 0,
         frameWidth: 0,
         frameHeight: 0,
 
-        get statusText() {
+        stream: null,
+        scanner: new BarcodeScanner(),
+        audio: new AudioManager(),
+
+        get statusMessage() {
           if (this.scannedItems.length > 0) {
-            return `Найдено ${this.scannedItems.length} ${this.pluralize(this.scannedItems.length, "код", "кода", "кодов")}`;
+            const count = this.scannedItems.length;
+            return `Отсканировано: ${count} ${this.pluralize(count, "ценник", "ценника", "ценников")}`;
           }
-          return "Расположите документ A4 в рамке";
+          return "Наведите камеру на ценник";
         },
 
         pluralize(n, one, few, many) {
@@ -668,79 +1325,88 @@
         },
 
         async init() {
-          TelegramWebApp.initialize();
+          TelegramApp.init();
           this.scanner.init();
           this.audio.init();
           this.calculateDimensions();
 
           window.addEventListener("resize", () => this.calculateDimensions());
+          window.addEventListener("orientationchange", () => {
+            setTimeout(() => this.calculateDimensions(), 100);
+          });
 
-          await this.checkCameraPermission();
-
-          if (this.cameraState === "granted") {
-            await this.startCamera();
-          }
+          await this.checkPermission();
         },
 
         destroy() {
           this.stopCamera();
-          this.scanner.reset();
+          this.scanner.stop();
         },
 
         calculateDimensions() {
-          const viewportHeight = window.innerHeight;
-          const viewportWidth = window.innerWidth;
+          const vh = window.innerHeight;
+          const vw = window.innerWidth;
 
-          this.scannerHeight = Math.min(
-            Math.floor(viewportHeight * 0.55),
-            500
-          );
+          this.scannerHeight = Math.min(Math.floor(vh * 0.52), 480);
 
-          const maxWidth = Math.min(viewportWidth - 32, 480);
+          const maxFrameWidth = Math.min(vw - 48, 400);
           const a4Ratio = 210 / 297;
 
-          this.frameHeight = Math.floor(this.scannerHeight * 0.88);
+          this.frameHeight = Math.floor(this.scannerHeight * 0.85);
           this.frameWidth = Math.floor(this.frameHeight * a4Ratio);
 
-          if (this.frameWidth > maxWidth * 0.92) {
-            this.frameWidth = Math.floor(maxWidth * 0.92);
+          if (this.frameWidth > maxFrameWidth) {
+            this.frameWidth = maxFrameWidth;
             this.frameHeight = Math.floor(this.frameWidth / a4Ratio);
           }
         },
 
-        async checkCameraPermission() {
+        async checkPermission() {
           try {
             const result = await navigator.permissions.query({
               name: "camera",
             });
-            this.cameraState = result.state;
 
-            result.addEventListener("change", () => {
-              this.cameraState = result.state;
+            if (result.state === "granted") {
+              this.appState = "scanner";
+              await this.$nextTick();
+              await this.startCamera();
+            } else if (result.state === "denied") {
+              this.permissionError = true;
+            }
+
+            result.addEventListener("change", async () => {
               if (result.state === "granted" && !this.stream) {
-                this.startCamera();
+                this.appState = "scanner";
+                this.permissionError = false;
+                await this.$nextTick();
+                await this.startCamera();
+              } else if (result.state === "denied") {
+                this.permissionError = true;
               }
             });
-          } catch {
-            this.cameraState = "prompt";
+          } catch (e) {
+            console.warn("[checkPermission]", e);
           }
         },
 
-        async requestCamera() {
-          if (this.isRequestingCamera) return;
+        async requestCameraPermission() {
+          if (this.isLoading) return;
 
-          this.isRequestingCamera = true;
-          TelegramWebApp.hapticImpact("light");
+          this.isLoading = true;
+          this.permissionError = false;
+          TelegramApp.hapticImpact("light");
 
           try {
             await this.startCamera();
-            this.cameraState = "granted";
-          } catch (err) {
-            console.error("[requestCamera]", err);
-            this.cameraState = "denied";
-            TelegramWebApp.hapticNotification("error");
+            this.appState = "scanner";
+          } catch (e) {
+            console.error("[requestCameraPermission]", e);
+            this.permissionError = true;
+            TelegramApp.hapticNotification("error");
+            this.audio.playError();
           } finally {
-            this.isRequestingCamera = false;
+            this.isLoading = false;
           }
         },
 
@@ -748,7 +1414,7 @@
           try {
             this.stream = await navigator.mediaDevices.getUserMedia({
               video: {
-                facingMode: "environment",
+                facingMode: { ideal: "environment" },
                 width: { ideal: 1920, min: 1280 },
                 height: { ideal: 1080, min: 720 },
               },
@@ -756,81 +1422,100 @@
             });
 
             const track = this.stream.getVideoTracks()[0];
-            const capabilities = track.getCapabilities?.() || {};
 
-            const constraints = {};
+            const capabilities = track.getCapabilities?.() || {};
+            this.hasTorch = !!capabilities.torch;
+
+            const advancedConstraints = {};
             if (capabilities.focusMode?.includes("continuous")) {
-              constraints.focusMode = "continuous";
+              advancedConstraints.focusMode = "continuous";
             }
             if (capabilities.exposureMode?.includes("continuous")) {
-              constraints.exposureMode = "continuous";
-            }
-            if (capabilities.whiteBalanceMode?.includes("continuous")) {
-              constraints.whiteBalanceMode = "continuous";
+              advancedConstraints.exposureMode = "continuous";
             }
 
-            if (Object.keys(constraints).length > 0) {
+            if (Object.keys(advancedConstraints).length > 0) {
               try {
-                await track.applyConstraints({ advanced: [constraints] });
+                await track.applyConstraints({
+                  advanced: [advancedConstraints],
+                });
               } catch {}
             }
 
             await this.$nextTick();
 
-            const video = this.$refs.video;
+            const video = this.$refs.videoElement;
             if (video) {
               video.srcObject = this.stream;
               await video.play();
               this.startScanning();
             }
-          } catch (err) {
-            console.error("[startCamera]", err);
-            throw err;
+          } catch (e) {
+            console.error("[startCamera]", e);
+            throw e;
           }
         },
 
         stopCamera() {
-          this.isScanning = false;
-          this.scanner.reset();
+          this.scannerActive = false;
+          this.scanner.stop();
 
           if (this.stream) {
             this.stream.getTracks().forEach((track) => track.stop());
             this.stream = null;
           }
 
-          const video = this.$refs.video;
+          const video = this.$refs.videoElement;
           if (video) {
             video.srcObject = null;
           }
         },
 
-        startScanning() {
-          if (this.isScanning) return;
+        async toggleTorch() {
+          if (!this.stream || !this.hasTorch) return;
 
-          this.isScanning = true;
-          this.scanner.isRunning = true;
+          TelegramApp.hapticImpact("light");
+
+          try {
+            const track = this.stream.getVideoTracks()[0];
+            this.torchOn = !this.torchOn;
+            await track.applyConstraints({
+              advanced: [{ torch: this.torchOn }],
+            });
+          } catch (e) {
+            console.warn("[toggleTorch]", e);
+            this.torchOn = false;
+          }
+        },
+
+        startScanning() {
+          if (this.scannerActive) return;
+
+          this.scannerActive = true;
+          this.scanner.isActive = true;
           this.scanLoop();
         },
 
         async scanLoop() {
-          if (!this.scanner.isRunning || !this.isScanning) return;
+          if (!this.scanner.isActive || !this.scannerActive) return;
 
           const now = performance.now();
-          const frameInterval = 1000 / this.scanner.fps;
 
-          if (now - this.scanner.lastFrameTime >= frameInterval) {
+          if (now - this.scanner.lastFrameTime >= this.scanner.frameInterval) {
             this.scanner.lastFrameTime = now;
 
-            const video = this.$refs.video;
-            const scanner = this.$refs.scanner;
+            const video = this.$refs.videoElement;
+            const container = this.$refs.scannerContainer;
 
-            if (video?.videoWidth && scanner) {
-              const scannerRect = scanner.getBoundingClientRect();
+            if (video?.videoWidth && container) {
+              const containerRect = container.getBoundingClientRect();
               const frameRect = {
                 left:
-                  scannerRect.left + (scannerRect.width - this.frameWidth) / 2,
+                  containerRect.left +
+                  (containerRect.width - this.frameWidth) / 2,
                 top:
-                  scannerRect.top + (scannerRect.height - this.frameHeight) / 2,
+                  containerRect.top +
+                  (containerRect.height - this.frameHeight) / 2,
                 width: this.frameWidth,
                 height: this.frameHeight,
               };
@@ -838,7 +1523,7 @@
               const result = await this.scanner.decode(
                 video,
                 frameRect,
-                scannerRect
+                containerRect
               );
 
               if (
@@ -851,37 +1536,47 @@
             }
           }
 
-          this.scanner.animationId = requestAnimationFrame(() =>
-            this.scanLoop()
-          );
+          this.scanner.rafId = requestAnimationFrame(() => this.scanLoop());
         },
 
-        handleScanResult(text) {
-          const ean = this.extractEan(text);
-          if (!ean) return;
+        handleScanResult(rawText) {
+          const code = this.extractCode(rawText);
+          if (!code) return;
 
-          if (this.foundCodes.has(ean)) return;
+          // Check for duplicates
+          if (this.scannedCodes.has(code)) {
+            // Already scanned - light feedback
+            TelegramApp.hapticImpact("light");
+            return;
+          }
 
-          this.foundCodes.add(ean);
+          this.scannedCodes.add(code);
 
-          const type = this.detectCodeType(text, ean);
-
-          this.scannedItems.unshift({
-            id: ++this.idCounter,
-            ean,
-            type,
-            raw: text,
+          const type = this.detectCodeType(rawText, code);
+          const item = {
+            id: ++this.itemIdCounter,
+            code: code,
+            type: type,
+            raw: rawText,
             timestamp: Date.now(),
-          });
+            loading: true,
+            productInfo: null,
+            notFound: false,
+          };
 
-          this.triggerFeedback();
+          this.scannedItems.unshift(item);
+          this.triggerSuccessFeedback();
+
+          // Lookup product info
+          this.lookupProduct(item);
         },
 
-        extractEan(text) {
+        extractCode(text) {
           if (!text || typeof text !== "string") return null;
 
           text = text.trim();
 
+          // Handle semicolon-separated values (common in price tags)
           if (text.includes(";")) {
             const parts = text.split(";");
             for (const part of parts) {
@@ -892,75 +1587,134 @@
             }
           }
 
-          const cleaned = text.replace(/\D/g, "");
-          if (/^\d{8}$|^\d{12,14}$/.test(cleaned)) {
-            return cleaned;
+          // Extract numeric code
+          const numericOnly = text.replace(/\D/g, "");
+          if (/^\d{8}$|^\d{12,14}$/.test(numericOnly)) {
+            return numericOnly;
           }
 
-          if (text.length > 0 && text.length <= 200) {
+          // Return original if it's a reasonable length (QR code content)
+          if (text.length > 0 && text.length <= 256) {
             return text;
           }
 
           return null;
         },
 
-        detectCodeType(raw, ean) {
-          if (raw !== ean && raw.length > 20) return "QR Code";
-          if (/^\d{13}$/.test(ean)) return "EAN-13";
-          if (/^\d{8}$/.test(ean)) return "EAN-8";
-          if (/^\d{12}$/.test(ean)) return "UPC-A";
-          if (/^\d{14}$/.test(ean)) return "GTIN-14";
+        detectCodeType(raw, code) {
+          // QR codes usually have more complex content
+          if (raw !== code && raw.length > 20) return "QR Code";
+          if (/^\d{13}$/.test(code)) return "EAN-13";
+          if (/^\d{8}$/.test(code)) return "EAN-8";
+          if (/^\d{12}$/.test(code)) return "UPC-A";
+          if (/^\d{14}$/.test(code)) return "GTIN-14";
+          if (/^[A-Z0-9]+$/.test(code) && code.length <= 20) return "CODE-39";
           return "QR Code";
         },
 
-        triggerFeedback() {
-          this.isFlashing = true;
+        lookupProduct(item) {
+          // Simulate async lookup with timeout
           setTimeout(() => {
-            this.isFlashing = false;
-          }, 200);
+            const productInfo = PRODUCT_DATABASE[item.code];
 
-          TelegramWebApp.hapticNotification("success");
+            const itemIndex = this.scannedItems.findIndex(
+              (i) => i.id === item.id
+            );
+            if (itemIndex === -1) return;
+
+            this.scannedItems[itemIndex].loading = false;
+
+            if (productInfo) {
+              this.scannedItems[itemIndex].productInfo = productInfo;
+            } else {
+              this.scannedItems[itemIndex].notFound = true;
+            }
+          }, 500);
+        },
+
+        triggerSuccessFeedback() {
+          // Visual flash
+          this.flashActive = true;
+          setTimeout(() => {
+            this.flashActive = false;
+          }, 300);
+
+          // Haptic
+          TelegramApp.hapticNotification("success");
+
+          // Audio
           this.audio.playSuccess();
         },
 
-        getQrUrl(ean) {
-          return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(ean)}&margin=8&format=svg`;
+        generateQrUrl(code) {
+          return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(code)}&margin=8&format=svg`;
         },
 
-        getBarcodeUrl(ean) {
-          const cleanEan = ean.replace(/\D/g, "");
-          if (/^\d{13}$/.test(cleanEan)) {
-            return `https://barcodeapi.org/api/ean13/${cleanEan}`;
+        generateBarcodeUrl(code) {
+          const numericCode = code.replace(/\D/g, "");
+
+          if (/^\d{13}$/.test(numericCode)) {
+            return `https://barcodeapi.org/api/ean13/${numericCode}`;
           }
-          if (/^\d{8}$/.test(cleanEan)) {
-            return `https://barcodeapi.org/api/ean8/${cleanEan}`;
+          if (/^\d{8}$/.test(numericCode)) {
+            return `https://barcodeapi.org/api/ean8/${numericCode}`;
           }
-          if (/^\d{12}$/.test(cleanEan)) {
-            return `https://barcodeapi.org/api/upca/${cleanEan}`;
+          if (/^\d{12}$/.test(numericCode)) {
+            return `https://barcodeapi.org/api/upca/${numericCode}`;
           }
-          return `https://barcodeapi.org/api/128/${encodeURIComponent(ean)}`;
+          return `https://barcodeapi.org/api/128/${encodeURIComponent(code)}`;
         },
 
-        async copyToClipboard(text) {
+        handleImageError(event) {
+          // Replace broken image with placeholder
+          event.target.style.display = "none";
+        },
+
+        async copyCode(code) {
+          TelegramApp.hapticImpact("light");
+
           try {
-            await navigator.clipboard.writeText(text);
-            TelegramWebApp.hapticNotification("success");
-          } catch {
-            TelegramWebApp.hapticNotification("error");
+            await navigator.clipboard.writeText(code);
+            this.showCopyToast = true;
+            TelegramApp.hapticNotification("success");
+
+            setTimeout(() => {
+              this.showCopyToast = false;
+            }, 2000);
+          } catch (e) {
+            console.warn("[copyCode]", e);
+            TelegramApp.hapticNotification("error");
           }
         },
 
-        clearAll() {
-          TelegramWebApp.showConfirm(
-            "Очистить все отсканированные коды?",
+        removeItem(id) {
+          TelegramApp.hapticImpact("medium");
+
+          const item = this.scannedItems.find((i) => i.id === id);
+          if (item) {
+            this.scannedCodes.delete(item.code);
+          }
+
+          this.scannedItems = this.scannedItems.filter((i) => i.id !== id);
+        },
+
+        confirmClearAll() {
+          TelegramApp.hapticImpact("medium");
+
+          TelegramApp.showConfirm(
+            "Очистить все отсканированные ценники?",
             (confirmed) => {
               if (confirmed) {
-                this.scannedItems = [];
-                this.foundCodes.clear();
-                TelegramWebApp.hapticImpact("medium");
+                this.clearAll();
               }
             }
           );
+        },
+
+        clearAll() {
+          this.scannedItems = [];
+          this.scannedCodes.clear();
+          TelegramApp.hapticNotification("success");
         },
       }));
 
