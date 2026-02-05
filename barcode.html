@@ -1369,51 +1369,42 @@
         }
 
         async decode(video, frameRect, containerRect) {
-          if (!this.initialized || !video) return null;
+  if (!this.initialized || !video) return null;
 
-          if (
-            !video.videoWidth ||
-            !video.videoHeight ||
-            video.readyState < 2
-          ) {
-            return null;
-          }
+  if (!video.videoWidth || !video.videoHeight || video.readyState < 2) {
+    return null;
+  }
 
-          try {
-            const scaleX = video.videoWidth / containerRect.width;
-            const scaleY = video.videoHeight / containerRect.height;
+  try {
+    const scaleX = video.videoWidth / containerRect.width;
+    const scaleY = video.videoHeight / containerRect.height;
 
-            const sx = Math.max(
-              0,
-              Math.floor((frameRect.left - containerRect.left) * scaleX)
-            );
-            const sy = Math.max(
-              0,
-              Math.floor((frameRect.top - containerRect.top) * scaleY)
-            );
-            const sw = Math.min(
-              Math.floor(frameRect.width * scaleX),
-              video.videoWidth - sx
-            );
-            const sh = Math.min(
-              Math.floor(frameRect.height * scaleY),
-              video.videoHeight - sy
-            );
+    let sx = Math.floor((frameRect.left - containerRect.left) * scaleX);
+    let sy = Math.floor((frameRect.top - containerRect.top) * scaleY);
+    let sw = Math.floor(frameRect.width * scaleX);
+    let sh = Math.floor(frameRect.height * scaleY);
 
-            if (sw <= 10 || sh <= 10) return null;
+    sx = Math.max(0, Math.min(sx, video.videoWidth - 1));
+    sy = Math.max(0, Math.min(sy, video.videoHeight - 1));
+    sw = Math.min(sw, video.videoWidth - sx);
+    sh = Math.min(sh, video.videoHeight - sy);
 
-            this.canvas.width = sw;
-            this.canvas.height = sh;
+    if (sw <= 50 || sh <= 50) return null;
 
-            this.ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
+    const scale = Math.min(2, 800 / Math.max(sw, sh));
+    this.canvas.width = Math.floor(sw * scale);
+    this.canvas.height = Math.floor(sh * scale);
 
-            const result = this.reader.decodeFromCanvas(this.canvas);
-            return result?.getText() || null;
-          } catch (e) {
-            if (e.name !== "NotFoundException") {}
-            return null;
-          }
-        }
+    this.ctx.imageSmoothingEnabled = true;
+    this.ctx.imageSmoothingQuality = 'high';
+    this.ctx.drawImage(video, sx, sy, sw, sh, 0, 0, this.canvas.width, this.canvas.height);
+
+    const result = this.reader.decodeFromCanvas(this.canvas);
+    return result?.getText() || null;
+  } catch (e) {
+    return null;
+  }
+}
 
         stop() {
           this.isActive = false;
@@ -1891,56 +1882,44 @@
         },
 
         async scanLoop() {
-          if (
-            !this.scanner?.isActive ||
-            !this.scannerActive ||
-            this.isDestroyed
-          ) {
-            return;
-          }
+  if (!this.scanner?.isActive || !this.scannerActive || this.isDestroyed) {
+    return;
+  }
 
-          const now = performance.now();
+  const now = performance.now();
 
-          if (now - this.scanner.lastFrameTime >= this.scanner.frameInterval) {
-            this.scanner.lastFrameTime = now;
+  const frameInterval = 1000 / 15;
 
-            const video = this.$refs.videoElement;
-            const container = this.$refs.scannerContainer;
+  if (now - this.scanner.lastFrameTime >= frameInterval) {
+    this.scanner.lastFrameTime = now;
 
-            if (video?.videoWidth && video?.videoHeight && container) {
-              const containerRect = container.getBoundingClientRect();
+    const video = this.$refs.videoElement;
+    const container = this.$refs.scannerContainer;
 
-              const frameRect = {
-                left:
-                  containerRect.left +
-                  (containerRect.width - this.frameWidth) / 2,
-                top:
-                  containerRect.top +
-                  (containerRect.height - this.frameHeight) / 2,
-                width: this.frameWidth,
-                height: this.frameHeight,
-              };
+    if (video?.videoWidth && video?.videoHeight && container) {
+      const containerRect = container.getBoundingClientRect();
 
-              try {
-                const result = await this.scanner.decode(
-                  video,
-                  frameRect,
-                  containerRect
-                );
+      const expandFactor = 1.2;
+      const frameRect = {
+        left: containerRect.left + (containerRect.width - this.frameWidth * expandFactor) / 2,
+        top: containerRect.top + (containerRect.height - this.frameHeight * expandFactor) / 2,
+        width: this.frameWidth * expandFactor,
+        height: this.frameHeight * expandFactor,
+      };
 
-                if (
-                  result &&
-                  now - this.scanner.lastScanTime >= this.scanner.scanCooldown
-                ) {
-                  this.handleScanResult(result);
-                  this.scanner.lastScanTime = now;
-                }
-              } catch (e) {}
-            }
-          }
+      try {
+        const result = await this.scanner.decode(video, frameRect, containerRect);
 
-          this.scanner.rafId = requestAnimationFrame(() => this.scanLoop());
-        },
+        if (result && now - this.scanner.lastScanTime >= this.scanner.scanCooldown) {
+          this.handleScanResult(result);
+          this.scanner.lastScanTime = now;
+        }
+      } catch (e) {}
+    }
+  }
+
+  this.scanner.rafId = requestAnimationFrame(() => this.scanLoop());
+}
 
         handleScanResult(rawText) {
           if (this.isDestroyed) return;
