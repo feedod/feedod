@@ -351,7 +351,7 @@
     x-data="ScannerApp"
     x-init="init()"
     @pagehide.window="destroy()"
-    <!-- @visibilitychange.window="handleVisibilityChange()" -->
+    @visibilitychange.window="handleVisibilityChange()"
     class="flex min-h-dvh flex-col select-none bg-bg text-text"
     role="application"
     aria-label="Сканер ценников"
@@ -1109,7 +1109,9 @@
         "4607065370367": {
           name: "Чипсы Lay's Сметана и лук",
           weight: "140г",
-          price: "164"4607065370367": {
+          price: "164",
+        },
+        "4607065370367": {
           name: "Чипсы Lay's Сметана и лук",
           weight: "140г",
           price: "164.99",
