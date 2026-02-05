@@ -354,8 +354,6 @@
     @pagehide.window="destroy()"
     @visibilitychange.window="handleVisibilityChange()"
     class="flex min-h-dvh flex-col select-none bg-bg text-text"
-    role="application"
-    aria-label="Сканер ценников"
   >
     <template x-if="appState === 'permission'">
       <main
@@ -942,6 +940,12 @@
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
     <script>
+      const {
+        BrowserMultiFormatReader,
+        BarcodeFormat,
+        DecodeHintType
+      } = ZXing;
+
       const PRODUCT_DATABASE = Object.freeze({
         "4607065370015": {
           name: "Чипсы Московская картошка",
@@ -1106,11 +1110,6 @@
           name: "Чипсы Lay's Сметана и лук",
           weight: "140г",
           price: "164",
-        },
-        "4607065370367": {
-          name: "Чипсы Lay's Сметана и лук",
-          weight: "140г",
-          price: "164.99",
         },
         "4607065370374": {
           name: "Сухарики Воронцовские",
@@ -1342,7 +1341,7 @@
             ]);
             hints.set(DecodeHintType.TRY_HARDER, true);
 
-            this.reader = new ZXing.BrowserMultiFormatReader(hints);
+            this.reader = new BrowserMultiFormatReader(hints);
 
             if (typeof OffscreenCanvas !== "undefined") {
               this.canvas = new OffscreenCanvas(1, 1);
@@ -2135,12 +2134,6 @@
           TelegramApp.hapticNotification("success");
         },
       }));
-      
-      window.onerror = (msg, src, line, col, err) => {
-        alert(msg + '\n' + line + ':' + col);
-      };
-
-      Alpine.start();
     </script>
   </body>
 </html>
