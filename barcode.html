@@ -1328,16 +1328,7 @@
           try {
             const hints = new Map();
             hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-              BarcodeFormat.QR_CODE,
-              BarcodeFormat.EAN_13,
-              BarcodeFormat.EAN_8,
-              BarcodeFormat.CODE_128,
-              BarcodeFormat.CODE_39,
-              BarcodeFormat.UPC_A,
-              BarcodeFormat.UPC_E,
-              BarcodeFormat.DATA_MATRIX,
-              BarcodeFormat.PDF_417,
-              BarcodeFormat.ITF,
+              BarcodeFormat.QR_CODE
             ]);
             hints.set(DecodeHintType.TRY_HARDER, true);
 
@@ -1385,11 +1376,12 @@
 
     if (sw <= 50 || sh <= 50) return null;
 
-    const scale = Math.min(2, 800 / Math.max(sw, sh));
+    // const scale = Math.min(2, 800 / Math.max(sw, sh));
+    const scale = Math.min(4, 1400 / Math.max(sw, sh));
     this.canvas.width = Math.floor(sw * scale);
     this.canvas.height = Math.floor(sh * scale);
 
-    this.ctx.imageSmoothingEnabled = true;
+    // this.ctx.imageSmoothingEnabled = true;
     this.ctx.imageSmoothingQuality = 'high';
     this.ctx.drawImage(video, sx, sy, sw, sh, 0, 0, this.canvas.width, this.canvas.height);
 
@@ -1883,7 +1875,7 @@
 
   const now = performance.now();
 
-  const frameInterval = 1000 / 15;
+  const frameInterval = 1000 / 8;
 
   if (now - this.scanner.lastFrameTime >= frameInterval) {
     this.scanner.lastFrameTime = now;
@@ -1894,7 +1886,7 @@
     if (video?.videoWidth && video?.videoHeight && container) {
       const containerRect = container.getBoundingClientRect();
 
-      const expandFactor = 1.2;
+      const expandFactor = 2.0;
       const frameRect = {
         left: containerRect.left + (containerRect.width - this.frameWidth * expandFactor) / 2,
         top: containerRect.top + (containerRect.height - this.frameHeight * expandFactor) / 2,
