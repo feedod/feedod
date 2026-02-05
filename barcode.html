@@ -349,7 +349,7 @@
     </style>
   </head>
   <body
-    x-data="ScannerApp"
+    x-data="ScannerApp()"
     x-init="init()"
     @pagehide.window="destroy()"
     @visibilitychange.window="handleVisibilityChange()"
@@ -937,9 +937,10 @@
         <span class="text-sm font-medium text-white">Скопировано</span>
       </div>
     </div>
+    
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <script type="module">
-      import Alpine from "https://cdn.jsdelivr.net/npm/alpinejs@3/dist/module.esm.js";
       import {
         BrowserMultiFormatReader,
         BarcodeFormat,
