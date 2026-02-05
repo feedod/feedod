@@ -1696,8 +1696,10 @@
 
           await this.$nextTick();
           await Utils.delay(100);
-
-          this.calculateDimensions();
+          
+          setTimeout(() => {
+            this.calculateDimensions();
+          }, 100);
 
           let stream = null;
 
