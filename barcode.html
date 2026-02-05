@@ -1450,6 +1450,7 @@
         },
       };
 
+    document.addEventListener('alpine:init', () => {
       Alpine.data("ScannerApp", () => ({
         appState: "permission",
         isLoading: false,
@@ -2134,6 +2135,7 @@
           TelegramApp.hapticNotification("success");
         },
       }));
+      });
     </script>
   </body>
 </html>
