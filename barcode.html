@@ -939,14 +939,9 @@
     </div>
     
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
 
     <script type="module">
-      import {
-        BrowserMultiFormatReader,
-        BarcodeFormat,
-        DecodeHintType,
-      } from "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/+esm";
-
       const PRODUCT_DATABASE = Object.freeze({
         "4607065370015": {
           name: "Чипсы Московская картошка",
@@ -1347,7 +1342,7 @@
             ]);
             hints.set(DecodeHintType.TRY_HARDER, true);
 
-            this.reader = new BrowserMultiFormatReader(hints);
+            this.reader = new ZXing.BrowserMultiFormatReader(hints);
 
             if (typeof OffscreenCanvas !== "undefined") {
               this.canvas = new OffscreenCanvas(1, 1);
