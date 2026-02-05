@@ -1376,14 +1376,14 @@
     this.canvas.width = Math.floor(sw * scale);
     this.canvas.height = Math.floor(sh * scale);
 
-    this.ctx.imageSmoothingQuality = 'high';
+    // this.ctx.imageSmoothingQuality = 'high';
     this.ctx.drawImage(video, sx, sy, sw, sh, 0, 0, this.canvas.width, this.canvas.height);
 
     const result = this.reader.decodeFromCanvas(this.canvas);
     return result?.getText() || null;
   } catch (e) {
-    return null;
-  }
+  console.error("ZXing decode error:", e);
+}
 }
 
         stop() {
