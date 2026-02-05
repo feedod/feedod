@@ -937,11 +937,11 @@
     </div>
     
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://unpkg.com/@zxing/browser@latest"></script>
+<script src="https://unpkg.com/@zxing/library@0.21.3"></script>
 
     <script>
-      const { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } = ZXingBrowser;
-
+      const { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } = ZXing;
+      
       const PRODUCT_DATABASE = Object.freeze({
         "4607065370015": {
           name: "Чипсы Московская картошка",
@@ -1372,11 +1372,12 @@
 
     if (sw <= 50 || sh <= 50) return null;
 
-    const scale = Math.min(4, 1400 / Math.max(sw, sh));
+    // const scale = Math.min(4, 1400 / Math.max(sw, sh));
+    const scale = 2.0;
     this.canvas.width = Math.floor(sw * scale);
     this.canvas.height = Math.floor(sh * scale);
 
-    // this.ctx.imageSmoothingQuality = 'high';
+    this.ctx.imageSmoothingQuality = 'false';
     this.ctx.drawImage(video, sx, sy, sw, sh, 0, 0, this.canvas.width, this.canvas.height);
 
     const result = this.reader.decodeFromCanvas(this.canvas);
