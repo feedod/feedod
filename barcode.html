@@ -178,13 +178,13 @@
       }
 
       .glass {
-        background: rgba(28, 28, 30, 0.85);
+        background: rgba(28, 28, 30, 0.95);
         backdrop-filter: blur(20px) saturate(180%);
         -webkit-backdrop-filter: blur(20px) saturate(180%);
       }
 
       .glass-light {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.15);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
       }
@@ -608,7 +608,7 @@
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    d="m4.5 12.75 6 6 9-13.5"
+                    d="м4.5 12.75 6 6 9-13.5"
                   />
                 </svg>
               </div>
@@ -630,7 +630,7 @@
                 class="h-2 w-2 rounded-full bg-success pulse"
                 aria-hidden="true"
               ></div>
-              <span class="text-xs font-medium text-white">Сканирование</span>
+              <span class="text-xs font-medium text-white" style="text-shadow: 0 1px 2px rgba(0,0,0,0.5)">Сканирование</span>
             </div>
 
             <button
@@ -648,6 +648,7 @@
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 aria-hidden="true"
+                style="filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5))"
               >
                 <path
                   stroke-linecap="round"
@@ -1354,7 +1355,7 @@
           this.rafId = null;
           this.lastScanTime = 0;
           this.scanCooldown = 800;
-          this.frameInterval = 1000 / 15;
+          this.frameInterval = 1000 / 10;
           this.lastFrameTime = 0;
           this.initialized = false;
         }
@@ -1416,9 +1417,9 @@
             sw = Math.min(sw, video.videoWidth - sx);
             sh = Math.min(sh, video.videoHeight - sy);
 
-            if (sw <= 64 || sh <= 64) return null;
+            if (sw <= 32 || sh <= 32) return null;
 
-            const scale = 1.5;
+            const scale = 2.0;
             this.canvas.width = Math.floor(sw * scale);
             this.canvas.height = Math.floor(sh * scale);
 
@@ -1695,11 +1696,18 @@
             await Utils.delay(50);
             await this.startCamera();
           } catch (e) {
-            this.permissionError = true;
             this.appState = "permission";
             TelegramApp.hapticNotification("error");
             this.audio?.playError();
-            this.showToast('Не удалось получить доступ к камере', 'error');
+
+            if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+              this.permissionError = true;
+              this.showToast('Доступ к камере запрещён', 'error');
+            } else if (e.name === 'NotFoundError') {
+              this.showToast('Камера не найдена на устройстве', 'error');
+            } else {
+              this.showToast('Ошибка камеры: ' + e.message, 'error');
+            }
           } finally {
             this.isLoading = false;
           }
@@ -1718,7 +1726,7 @@
           const constraints = [
             {
               video: {
-                facingMode: { exact: "environment" },
+                facingMode: "environment",
                 width: { ideal: 1920 },
                 height: { ideal: 1080 },
               },
@@ -1742,17 +1750,20 @@
             { video: true, audio: false },
           ];
 
+          let lastError = null;
+
           for (const constraint of constraints) {
             try {
               stream = await navigator.mediaDevices.getUserMedia(constraint);
               break;
             } catch (e) {
+              lastError = e;
               continue;
             }
           }
 
           if (!stream) {
-            throw new Error("Не удалось получить доступ к камере");
+            throw lastError || new Error("Не удалось получить доступ к камере");
           }
 
           if (this.isDestroyed) {
@@ -1907,7 +1918,7 @@
             if (video?.videoWidth && video?.videoHeight && container) {
               const containerRect = container.getBoundingClientRect();
 
-              const expandFactor = 1.2;
+              const expandFactor = 1.8;
               const frameRect = {
                 left: containerRect.left + (containerRect.width - this.frameWidth * expandFactor) / 2,
                 top: containerRect.top + (containerRect.height - this.frameHeight * expandFactor) / 2,
