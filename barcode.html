@@ -1,3 +1,5 @@
+Что делает этот код?
+
 <!DOCTYPE html>
 <html lang="ru">
   <head>
@@ -7,7 +9,6 @@
       content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"
     />
     <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#000000" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style type="text/tailwindcss">
@@ -178,13 +179,13 @@
       }
 
       .glass {
-        background: rgba(28, 28, 30, 0.95);
+        background: rgba(28, 28, 30, 0.85);
         backdrop-filter: blur(20px) saturate(180%);
         -webkit-backdrop-filter: blur(20px) saturate(180%);
       }
 
       .glass-light {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
       }
@@ -203,11 +204,6 @@
           0 2px 6px rgba(48, 209, 88, 0.2);
       }
 
-      .btn-primary:focus-visible {
-        outline: 2px solid var(--color-success);
-        outline-offset: 2px;
-      }
-
       .card {
         background: linear-gradient(
           180deg,
@@ -220,7 +216,6 @@
       .scanner-frame {
         border: 2px solid rgba(255, 255, 255, 0.3);
         transition: all 0.3s ease;
-        z-index: 2;
       }
 
       .scanner-frame.active {
@@ -318,48 +313,17 @@
           background-position: -200% 0;
         }
       }
-
-      @media (prefers-reduced-motion: reduce) {
-        *,
-        *::before,
-        *::after {
-          animation-duration: 0.01ms !important;
-          animation-iteration-count: 1 !important;
-          transition-duration: 0.01ms !important;
-        }
-      }
-
-      button:focus-visible,
-      a:focus-visible {
-        outline: 2px solid var(--color-accent);
-        outline-offset: 2px;
-      }
-
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-      }
     </style>
   </head>
   <body
-    x-data="ScannerApp()"
+    x-data="ScannerApp"
     x-init="init()"
     @pagehide.window="destroy()"
-    @visibilitychange.window="handleVisibilityChange()"
     class="flex min-h-dvh flex-col select-none bg-bg text-text"
   >
     <template x-if="appState === 'permission'">
       <main
         class="fade-in mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-6"
-        role="main"
-        aria-labelledby="permission-title"
       >
         <div class="relative mb-10">
           <div
@@ -369,7 +333,6 @@
                 0 0 0 1px rgba(255, 255, 255, 0.1),
                 0 20px 40px rgba(0, 0, 0, 0.4);
             "
-            aria-hidden="true"
           >
             <svg
               class="h-14 w-14 text-white opacity-90"
@@ -377,7 +340,6 @@
               stroke="currentColor"
               stroke-width="1.5"
               viewBox="0 0 24 24"
-              aria-hidden="true"
             >
               <path
                 stroke-linecap="round"
@@ -393,7 +355,6 @@
           </div>
           <div
             class="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-full border-4 border-bg bg-accent"
-            aria-hidden="true"
           >
             <svg
               class="h-5 w-5 text-white"
@@ -401,7 +362,6 @@
               stroke="currentColor"
               stroke-width="2.5"
               viewBox="0 0 24 24"
-              aria-hidden="true"
             >
               <path
                 stroke-linecap="round"
@@ -412,10 +372,7 @@
           </div>
         </div>
 
-        <h1
-          id="permission-title"
-          class="mb-3 text-center text-2xl font-bold tracking-tight"
-        >
+        <h1 class="mb-3 text-center text-2xl font-bold tracking-tight">
           Доступ к камере
         </h1>
         <p
@@ -427,17 +384,10 @@
         <button
           @click="requestCameraPermission"
           :disabled="isLoading"
-          :aria-busy="isLoading"
           class="btn-primary flex h-[54px] w-full max-w-[280px] items-center justify-center gap-3 rounded-[14px] text-[17px] font-semibold text-white transition-all disabled:opacity-50"
-          aria-describedby="permission-description"
         >
           <template x-if="isLoading">
-            <svg
-              class="h-5 w-5 animate-spin"
-              fill="none"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
+            <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle
                 class="opacity-25"
                 cx="12"
@@ -460,7 +410,6 @@
               stroke="currentColor"
               stroke-width="2"
               viewBox="0 0 24 24"
-              aria-hidden="true"
             >
               <path
                 stroke-linecap="round"
@@ -471,21 +420,15 @@
           </template>
           <span x-text="isLoading ? 'Запрос...' : 'Разрешить камеру'"></span>
         </button>
-        <p id="permission-description" class="sr-only">
-          Нажмите для запроса доступа к камере устройства
-        </p>
 
         <div
           x-show="permissionError"
           x-transition:enter="fade-in"
           class="error-banner mt-8 w-full max-w-[320px] rounded-2xl p-4"
-          role="alert"
-          aria-live="polite"
         >
           <div class="flex items-start gap-3">
             <div
               class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-error/20"
-              aria-hidden="true"
             >
               <svg
                 class="h-4 w-4 text-error"
@@ -514,46 +457,29 @@
     </template>
 
     <template x-if="appState === 'scanner'">
-      <main
-        class="mx-auto flex w-full max-w-lg flex-1 flex-col"
-        role="main"
-        aria-labelledby="scanner-title"
+  <main class="mx-auto flex w-full max-w-lg flex-1 flex-col">
+    <header class="fade-in px-4 pb-4 pt-6 text-center">
+      <h1 class="text-lg font-semibold text-text">Сканер ценников</h1>
+      <p class="mt-1 text-sm text-muted" x-text="statusMessage"></p>
+    </header>
+
+    <section class="fade-in px-4" style="animation-delay: 50ms">
+      <div
+        x-ref="scannerContainer"
+        class="relative overflow-hidden rounded-3xl bg-black"
+        :style="{ height: scannerHeight + 'px' }"
       >
-        <header class="fade-in px-4 pb-4 pt-6 text-center">
-          <h1 id="scanner-title" class="text-lg font-semibold text-text">
-            Сканер ценников
-          </h1>
-          <p
-            class="mt-1 text-sm text-muted"
-            x-text="statusMessage"
-            aria-live="polite"
-          ></p>
-        </header>
+        <video
+          x-ref="videoElement"
+          autoplay
+          playsinline
+          webkit-playsinline
+          muted
+          class="absolute inset-0 h-full w-full object-cover"
+          style="z-index: 1; background: #000;"
+        ></video>
 
-        <section
-          class="fade-in px-4"
-          style="animation-delay: 50ms"
-          aria-label="Область сканирования"
-        >
-          <div
-            x-ref="scannerContainer"
-            class="relative overflow-hidden rounded-3xl bg-black"
-            :style="{ height: scannerHeight + 'px' }"
-            role="img"
-            aria-label="Видео с камеры для сканирования штрих-кодов"
-          >
-            <video
-              x-ref="videoElement"
-              autoplay
-              playsinline
-              webkit-playsinline
-              muted
-              class="absolute inset-0 h-full w-full object-cover"
-              style="z-index: 1; background: #000"
-              aria-hidden="true"
-            ></video>
-
-            <div class="pointer-events-none absolute inset-0 z-[3]" aria-hidden="true">
+            <div class="pointer-events-none absolute inset-0">
               <div
                 class="scanner-frame absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl"
                 :class="{ 'success-flash': flashActive }"
@@ -564,19 +490,19 @@
               >
                 <div
                   class="corner corner-tl"
-                  :class="{ active: flashActive }"
+                  :class="{ 'active': flashActive }"
                 ></div>
                 <div
                   class="corner corner-tr"
-                  :class="{ active: flashActive }"
+                  :class="{ 'active': flashActive }"
                 ></div>
                 <div
                   class="corner corner-bl"
-                  :class="{ active: flashActive }"
+                  :class="{ 'active': flashActive }"
                 ></div>
                 <div
                   class="corner corner-br"
-                  :class="{ active: flashActive }"
+                  :class="{ 'active': flashActive }"
                 ></div>
 
                 <div
@@ -590,13 +516,10 @@
             <div
               x-show="scannedItems.length > 0"
               x-transition:enter="fade-in-scale"
-              class="glass absolute right-4 top-4 flex items-center gap-2 rounded-full px-3 py-2 z-[4]"
-              role="status"
-              :aria-label="'Отсканировано ' + scannedItems.length + ' ' + pluralize(scannedItems.length, 'товар', 'товара', 'товаров')"
+              class="glass absolute right-4 top-4 flex items-center gap-2 rounded-full px-3 py-2"
             >
               <div
                 class="flex h-5 w-5 items-center justify-center rounded-full bg-success"
-                aria-hidden="true"
               >
                 <svg
                   class="h-3 w-3 text-white"
@@ -608,37 +531,29 @@
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    d="м4.5 12.75 6 6 9-13.5"
+                    d="m4.5 12.75 6 6 9-13.5"
                   />
                 </svg>
               </div>
               <span
                 class="text-sm font-bold text-white"
                 x-text="scannedItems.length"
-                aria-hidden="true"
               ></span>
             </div>
 
             <div
               x-show="scannerActive"
               x-transition
-              class="glass absolute bottom-4 left-4 flex items-center gap-2 rounded-full px-3 py-2 z-[4]"
-              role="status"
-              aria-live="polite"
+              class="glass absolute bottom-4 left-4 flex items-center gap-2 rounded-full px-3 py-2"
             >
-              <div
-                class="h-2 w-2 rounded-full bg-success pulse"
-                aria-hidden="true"
-              ></div>
-              <span class="text-xs font-medium text-white" style="text-shadow: 0 1px 2px rgba(0,0,0,0.5)">Сканирование</span>
+              <div class="h-2 w-2 rounded-full bg-success pulse"></div>
+              <span class="text-xs font-medium text-white">Сканирование</span>
             </div>
 
             <button
               x-show="hasTorch"
               @click="toggleTorch"
-              class="glass-light absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full transition-all active:scale-95 z-[4]"
-              :aria-label="torchOn ? 'Выключить фонарик' : 'Включить фонарик'"
-              :aria-pressed="torchOn"
+              class="glass-light absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full transition-all active:scale-95"
             >
               <svg
                 class="h-5 w-5"
@@ -647,8 +562,6 @@
                 stroke="currentColor"
                 stroke-width="2"
                 viewBox="0 0 24 24"
-                aria-hidden="true"
-                style="filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5))"
               >
                 <path
                   stroke-linecap="round"
@@ -660,10 +573,7 @@
           </div>
         </section>
 
-        <section
-          class="flex-1 px-4 pb-8 pt-6"
-          aria-label="Отсканированные товары"
-        >
+        <section class="flex-1 px-4 pb-8 pt-6">
           <template x-if="scannedItems.length > 0">
             <div class="slide-up">
               <div class="mb-4 flex items-center justify-between">
@@ -678,20 +588,18 @@
                 <button
                   @click="confirmClearAll"
                   class="text-sm font-medium text-error transition-opacity active:opacity-60"
-                  aria-label="Очистить все отсканированные товары"
                 >
                   Очистить
                 </button>
               </div>
 
-              <ul class="space-y-3" role="list" aria-label="Список товаров">
+              <div class="space-y-3">
                 <template x-for="item in scannedItems" :key="item.id">
-                  <li class="product-card slide-up">
+                  <div class="product-card slide-up">
                     <div class="flex items-start justify-between p-4 pb-3">
                       <div class="flex items-center gap-3">
                         <div
                           class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-success/15"
-                          aria-hidden="true"
                         >
                           <svg
                             class="h-5 w-5 text-success"
@@ -703,7 +611,7 @@
                             <path
                               stroke-linecap="round"
                               stroke-linejoin="round"
-                              d="м4.5 12.75 6 6 9-13.5"
+                              d="m4.5 12.75 6 6 9-13.5"
                             />
                           </svg>
                         </div>
@@ -720,7 +628,7 @@
                         <button
                           @click="copyCode(item.code)"
                           class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-elevated transition-all active:scale-95"
-                          :aria-label="'Копировать код ' + item.code"
+                          title="Копировать"
                         >
                           <svg
                             class="h-5 w-5 text-muted"
@@ -728,7 +636,6 @@
                             stroke="currentColor"
                             stroke-width="1.5"
                             viewBox="0 0 24 24"
-                            aria-hidden="true"
                           >
                             <path
                               stroke-linecap="round"
@@ -740,7 +647,7 @@
                         <button
                           @click="removeItem(item.id)"
                           class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-elevated transition-all active:scale-95"
-                          :aria-label="'Удалить товар с кодом ' + item.code"
+                          title="Удалить"
                         >
                           <svg
                             class="h-5 w-5 text-error"
@@ -748,7 +655,6 @@
                             stroke="currentColor"
                             stroke-width="1.5"
                             viewBox="0 0 24 24"
-                            aria-hidden="true"
                           >
                             <path
                               stroke-linecap="round"
@@ -776,17 +682,13 @@
                           <div
                             class="price-tag rounded-lg px-3 py-1.5 text-lg"
                             x-text="item.productInfo.price + ' ₽'"
-                            :aria-label="'Цена: ' + item.productInfo.price + ' рублей'"
                           ></div>
                         </div>
                       </div>
                     </template>
 
                     <template x-if="item.notFound">
-                      <div
-                        class="border-t border-border/50 px-4 py-3"
-                        role="alert"
-                      >
+                      <div class="border-t border-border/50 px-4 py-3">
                         <div
                           class="flex items-center gap-2 text-sm text-warning"
                         >
@@ -796,7 +698,6 @@
                             stroke="currentColor"
                             stroke-width="2"
                             viewBox="0 0 24 24"
-                            aria-hidden="true"
                           >
                             <path
                               stroke-linecap="round"
@@ -810,11 +711,7 @@
                     </template>
 
                     <template x-if="item.loading">
-                      <div
-                        class="border-t border-border/50 px-4 py-3"
-                        role="status"
-                        aria-label="Загрузка информации о товаре"
-                      >
+                      <div class="border-t border-border/50 px-4 py-3">
                         <div class="flex items-center justify-between">
                           <div class="flex-1">
                             <div
@@ -835,7 +732,7 @@
                       <div class="rounded-xl bg-white p-3">
                         <img
                           :src="generateQrUrl(item.code)"
-                          :alt="'QR-код для ' + item.code"
+                          :alt="'QR: ' + item.code"
                           class="mx-auto h-20 w-20 object-contain"
                           loading="lazy"
                           @error="handleImageError($event)"
@@ -849,7 +746,7 @@
                       <div class="rounded-xl bg-white p-3">
                         <img
                           :src="generateBarcodeUrl(item.code)"
-                          :alt="'Штрих-код для ' + item.code"
+                          :alt="'Barcode: ' + item.code"
                           class="mx-auto h-20 w-full object-contain"
                           loading="lazy"
                           @error="handleImageError($event)"
@@ -861,20 +758,18 @@
                         </p>
                       </div>
                     </div>
-                  </li>
+                  </div>
                 </template>
-              </ul>
+              </div>
             </div>
           </template>
 
           <template x-if="scannedItems.length === 0 && scannerActive">
             <div
               class="fade-in mt-4 rounded-2xl border border-border bg-surface p-8 text-center"
-              role="status"
             >
               <div
                 class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-elevated"
-                aria-hidden="true"
               >
                 <svg
                   class="h-8 w-8 text-muted"
@@ -906,99 +801,42 @@
     </template>
 
     <div
-      x-show="showToast"
+      x-show="showCopyToast"
       x-transition:enter="transition ease-out duration-200"
       x-transition:enter-start="opacity-0 translate-y-4"
       x-transition:enter-end="opacity-100 translate-y-0"
       x-transition:leave="transition ease-in duration-150"
       x-transition:leave-start="opacity-100 translate-y-0"
       x-transition:leave-end="opacity-0 translate-y-4"
-      class="fixed bottom-8 left-1/2 z-50 -translate-x-1/2 rounded-full px-5 py-3"
-      :class="{
-        'glass': toastType === 'success' || toastType === 'info',
-        'error-banner': toastType === 'error',
-        'glass-light bg-warning/20': toastType === 'warn'
-      }"
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
+      class="glass fixed bottom-8 left-1/2 z-50 -translate-x-1/2 rounded-full px-5 py-3"
     >
       <div class="flex items-center gap-2">
-        <template x-if="toastType === 'success'">
-          <svg
-            class="h-5 w-5 text-success"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="м4.5 12.75 6 6 9-13.5"
-            />
-          </svg>
-        </template>
-        <template x-if="toastType === 'error'">
-          <svg
-            class="h-5 w-5 text-error"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
-            />
-          </svg>
-        </template>
-        <template x-if="toastType === 'warn'">
-          <svg
-            class="h-5 w-5 text-warning"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
-            />
-          </svg>
-        </template>
-        <template x-if="toastType === 'info'">
-          <svg
-            class="h-5 w-5 text-accent"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-            />
-          </svg>
-        </template>
-        <span class="text-sm font-medium text-white" x-text="toastMessage"></span>
+        <svg
+          class="h-5 w-5 text-success"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="m4.5 12.75 6 6 9-13.5"
+          />
+        </svg>
+        <span class="text-sm font-medium text-white">Скопировано</span>
       </div>
     </div>
-    
-      <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-      <script src="https://unpkg.com/@zxing/library@0.21.3"></script>
 
-    <script>
-      const { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } = ZXing;
-      
-      const PRODUCT_DATABASE = Object.freeze({
+    <script type="module">
+      import Alpine from "https://cdn.jsdelivr.net/npm/alpinejs@3/dist/module.esm.js";
+      import {
+        BrowserMultiFormatReader,
+        BarcodeFormat,
+        DecodeHintType,
+      } from "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/+esm";
+
+      const PRODUCT_DATABASE = {
         "4607065370015": {
           name: "Чипсы Московская картошка",
           weight: "130г",
@@ -1099,10 +937,26 @@
           weight: "200г",
           price: "72.99",
         },
-        "4607065370213": { name: "Сметана 20%", weight: "300г", price: "69.99" },
-        "4607065370220": { name: "Творог 9%", weight: "200г", price: "49.99" },
-        "4607065370237": { name: "Кефир 2.5%", weight: "900мл", price: "94.99" },
-        "4607065370244": { name: "Молоко 3.2%", weight: "1л", price: "79.99" },
+        "4607065370213": {
+          name: "Сметана 20%",
+          weight: "300г",
+          price: "69.99",
+        },
+        "4607065370220": {
+          name: "Творог 9%",
+          weight: "200г",
+          price: "49.99",
+        },
+        "4607065370237": {
+          name: "Кефир 2.5%",
+          weight: "900мл",
+          price: "94.99",
+        },
+        "4607065370244": {
+          name: "Молоко 3.2%",
+          weight: "1л",
+          price: "79.99",
+        },
         "4607065370251": {
           name: "Йогурт питьевой",
           weight: "290г",
@@ -1161,7 +1015,7 @@
         "4607065370367": {
           name: "Чипсы Lay's Сметана и лук",
           weight: "140г",
-          price: "164",
+          price: "164.99",
         },
         "4607065370374": {
           name: "Сухарики Воронцовские",
@@ -1178,47 +1032,32 @@
           weight: "250г",
           price: "62.99",
         },
-      });
+      };
 
       class TelegramApp {
-        static _instance = null;
-
         static get tg() {
           return window.Telegram?.WebApp;
         }
 
-        static get isAvailable() {
-          return !!this.tg;
-        }
-
         static init() {
           const tg = this.tg;
-          if (!tg) {
-            return false;
-          }
+          if (!tg) return;
 
           try {
             tg.ready();
-
-            const safeCalls = [
-              ["requestFullscreen"],
-              ["disableVerticalSwipes"],
-              ["setHeaderColor", "#000000"],
-              ["setBackgroundColor", "#000000"],
-            ];
-
-            safeCalls.forEach(([method, ...args]) => {
-              if (typeof tg[method] === "function") {
-                try {
-                  tg[method](...args);
-                } catch (e) {}
-              }
-            });
-
-            return true;
-          } catch (e) {
-            return false;
-          }
+            if (typeof tg.requestFullscreen === "function") {
+              tg.requestFullscreen();
+            }
+            if (typeof tg.disableVerticalSwipes === "function") {
+              tg.disableVerticalSwipes();
+            }
+            if (typeof tg.setHeaderColor === "function") {
+              tg.setHeaderColor("#000000");
+            }
+            if (typeof tg.setBackgroundColor === "function") {
+              tg.setBackgroundColor("#000000");
+            }
+          } catch (e) {}
         }
 
         static hapticImpact(style = "light") {
@@ -1234,19 +1073,13 @@
         }
 
         static showConfirm(message, callback) {
-          if (typeof callback !== "function") {
-            return;
-          }
-
           try {
             if (typeof this.tg?.showConfirm === "function") {
               this.tg.showConfirm(message, callback);
               return;
             }
-          } catch (e) {}
-
-          const result = confirm(message);
-          callback(result);
+          } catch {}
+          callback(confirm(message));
         }
 
         static showAlert(message) {
@@ -1255,8 +1088,7 @@
               this.tg.showAlert(message);
               return;
             }
-          } catch (e) {}
-
+          } catch {}
           alert(message);
         }
       }
@@ -1265,84 +1097,73 @@
         constructor() {
           this.context = null;
           this.initialized = false;
-          this.enabled = true;
         }
 
         init() {
-          if (this.initialized) return true;
-
+          if (this.initialized) return;
           try {
-            const AudioContext =
-              window.AudioContext || window.webkitAudioContext;
-            if (!AudioContext) {
-              return false;
-            }
-
-            this.context = new AudioContext();
+            this.context = new (window.AudioContext ||
+              window.webkitAudioContext)();
             this.initialized = true;
-            return true;
-          } catch (e) {
-            return false;
-          }
-        }
-
-        async resume() {
-          if (!this.context) return false;
-
-          try {
-            if (this.context.state === "suspended") {
-              await this.context.resume();
-            }
-            return true;
-          } catch (e) {
-            return false;
-          }
-        }
-
-        async playTone(frequency, duration, endFrequency = null) {
-          if (!this.context || !this.enabled) return;
-
-          try {
-            await this.resume();
-
-            const osc = this.context.createOscillator();
-            const gain = this.context.createGain();
-            const now = this.context.currentTime;
-
-            osc.type = "sine";
-            osc.frequency.setValueAtTime(frequency, now);
-
-            if (endFrequency !== null) {
-              osc.frequency.setValueAtTime(endFrequency, now + duration * 0.5);
-            }
-
-            gain.gain.setValueAtTime(0.12, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-            osc.connect(gain);
-            gain.connect(this.context.destination);
-
-            osc.start(now);
-            osc.stop(now + duration);
           } catch (e) {}
         }
 
         playSuccess() {
-          this.playTone(880, 0.15, 1320);
+          if (!this.context) return;
+
+          try {
+            if (this.context.state === "suspended") {
+              this.context.resume();
+            }
+
+            const osc = this.context.createOscillator();
+            const gain = this.context.createGain();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(880, this.context.currentTime);
+            osc.frequency.setValueAtTime(1320, this.context.currentTime + 0.08);
+
+            gain.gain.setValueAtTime(0.12, this.context.currentTime);
+            gain.gain.exponentialRampToValueAtTime(
+              0.001,
+              this.context.currentTime + 0.15
+            );
+
+            osc.connect(gain);
+            gain.connect(this.context.destination);
+
+            osc.start();
+            osc.stop(this.context.currentTime + 0.15);
+          } catch (e) {}
         }
 
         playError() {
-          this.playTone(300, 0.2, 200);
-        }
+          if (!this.context) return;
 
-        destroy() {
-          if (this.context) {
-            try {
-              this.context.close();
-            } catch {}
-            this.context = null;
-          }
-          this.initialized = false;
+          try {
+            if (this.context.state === "suspended") {
+              this.context.resume();
+            }
+
+            const osc = this.context.createOscillator();
+            const gain = this.context.createGain();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(300, this.context.currentTime);
+            osc.frequency.setValueAtTime(200, this.context.currentTime + 0.1);
+
+            gain.gain.setValueAtTime(0.1, this.context.currentTime);
+            gain.gain.exponentialRampToValueAtTime(
+              0.001,
+              this.context.currentTime + 0.2
+            );
+
+            osc.connect(gain);
+            gain.connect(this.context.destination);
+
+            osc.start();
+            osc.stop(this.context.currentTime + 0.2);
+          } catch {}
         }
       }
 
@@ -1354,52 +1175,34 @@
           this.isActive = false;
           this.rafId = null;
           this.lastScanTime = 0;
-          this.scanCooldown = 800;
+          this.scanCooldown = 1000;
           this.frameInterval = 1000 / 10;
           this.lastFrameTime = 0;
-          this.initialized = false;
         }
 
         init() {
-          if (this.initialized) return true;
+          const hints = new Map();
+          hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+            BarcodeFormat.QR_CODE,
+            BarcodeFormat.EAN_13,
+            BarcodeFormat.EAN_8,
+            BarcodeFormat.CODE_128,
+            BarcodeFormat.CODE_39,
+            BarcodeFormat.UPC_A,
+            BarcodeFormat.UPC_E,
+            BarcodeFormat.DATA_MATRIX,
+            BarcodeFormat.PDF_417,
+            BarcodeFormat.ITF,
+          ]);
+          hints.set(DecodeHintType.TRY_HARDER, true);
 
-          try {
-            const hints = new Map();
-            hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-              BarcodeFormat.QR_CODE,
-              BarcodeFormat.EAN_13,
-              BarcodeFormat.EAN_8,
-              BarcodeFormat.UPC_A,
-              BarcodeFormat.UPC_E,
-              BarcodeFormat.CODE_128,
-              BarcodeFormat.CODE_39,
-            ]);
-            hints.set(DecodeHintType.TRY_HARDER, true);
-
-            this.reader = new BrowserMultiFormatReader(hints);
-
-            if (typeof OffscreenCanvas !== "undefined") {
-              this.canvas = new OffscreenCanvas(1, 1);
-            } else {
-              this.canvas = document.createElement("canvas");
-            }
-
-            this.ctx = this.canvas.getContext("2d", {
-              willReadFrequently: true,
-              alpha: false,
-            });
-
-            this.initialized = true;
-            return true;
-          } catch (e) {
-            return false;
-          }
+          this.reader = new BrowserMultiFormatReader(hints);
+          this.canvas = new OffscreenCanvas(1, 1);
+          this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
         }
 
         async decode(video, frameRect, containerRect) {
-          if (!this.initialized || !video) return null;
-
-          if (!video.videoWidth || !video.videoHeight || video.readyState < video.HAVE_ENOUGH_DATA) {
+          if (!video || !video.videoWidth || !video.videoHeight) {
             return null;
           }
 
@@ -1407,27 +1210,41 @@
             const scaleX = video.videoWidth / containerRect.width;
             const scaleY = video.videoHeight / containerRect.height;
 
-            let sx = Math.floor((frameRect.left - containerRect.left) * scaleX);
-            let sy = Math.floor((frameRect.top - containerRect.top) * scaleY);
-            let sw = Math.floor(frameRect.width * scaleX);
-            let sh = Math.floor(frameRect.height * scaleY);
+            const sx = Math.max(
+              0,
+              (frameRect.left - containerRect.left) * scaleX
+            );
+            const sy = Math.max(
+              0,
+              (frameRect.top - containerRect.top) * scaleY
+            );
+            const sw = Math.min(
+              frameRect.width * scaleX,
+              video.videoWidth - sx
+            );
+            const sh = Math.min(
+              frameRect.height * scaleY,
+              video.videoHeight - sy
+            );
 
-            sx = Math.max(0, Math.min(sx, video.videoWidth - 1));
-            sy = Math.max(0, Math.min(sy, video.videoHeight - 1));
-            sw = Math.min(sw, video.videoWidth - sx);
-            sh = Math.min(sh, video.videoHeight - sy);
+            if (sw <= 0 || sh <= 0) return null;
 
-            if (sw <= 32 || sh <= 32) return null;
+            this.canvas.width = Math.floor(sw);
+            this.canvas.height = Math.floor(sh);
 
-            const scale = 2.0;
-            this.canvas.width = Math.floor(sw * scale);
-            this.canvas.height = Math.floor(sh * scale);
+            this.ctx.drawImage(
+              video,
+              sx,
+              sy,
+              sw,
+              sh,
+              0,
+              0,
+              this.canvas.width,
+              this.canvas.height
+            );
 
-            this.ctx.imageSmoothingEnabled = false;
-
-            this.ctx.drawImage(video, sx, sy, sw, sh, 0, 0, this.canvas.width, this.canvas.height);
-
-            const result = await this.reader.decodeFromCanvas(this.canvas);
+            const result = this.reader.decodeFromCanvas(this.canvas);
             return result?.getText() || null;
           } catch (e) {
             return null;
@@ -1436,70 +1253,28 @@
 
         stop() {
           this.isActive = false;
-
           if (this.rafId) {
             cancelAnimationFrame(this.rafId);
             this.rafId = null;
           }
-
           try {
             this.reader?.reset();
           } catch {}
         }
-
-        destroy() {
-          this.stop();
-          this.reader = null;
-          this.canvas = null;
-          this.ctx = null;
-          this.initialized = false;
-        }
       }
 
-      const Utils = {
-        delay(ms) {
-          return new Promise((resolve) => setTimeout(resolve, ms));
-        },
-
-        debounce(fn, delay) {
-          let timeoutId;
-          return function (...args) {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => fn.apply(this, args), delay);
-          };
-        },
-
-        pluralize(n, one, few, many) {
-          const mod10 = n % 10;
-          const mod100 = n % 100;
-
-          if (mod100 >= 11 && mod100 <= 19) return many;
-          if (mod10 === 1) return one;
-          if (mod10 >= 2 && mod10 <= 4) return few;
-          return many;
-        },
-
-        generateId() {
-          return Date.now().toString(36) + Math.random().toString(36).slice(2);
-        },
-      };
-
-    document.addEventListener('alpine:init', () => {
       Alpine.data("ScannerApp", () => ({
         appState: "permission",
         isLoading: false,
         permissionError: false,
         scannerActive: false,
         flashActive: false,
-        showToast: false,
-        toastMessage: '',
-        toastType: 'success',
+        showCopyToast: false,
         hasTorch: false,
         torchOn: false,
-        isDestroyed: false,
 
         scannedItems: [],
-        scannedCodes: new Map(),
+        scannedCodes: {},
         itemIdCounter: 0,
 
         scannerHeight: 0,
@@ -1507,13 +1282,11 @@
         frameHeight: 0,
 
         stream: null,
-        scanner: null,
-        audio: null,
+        scanner: new BarcodeScanner(),
+        audio: new AudioManager(),
 
         _resizeHandler: null,
         _orientationHandler: null,
-        _visibilityHandler: null,
-        _toastTimeout: null,
 
         get statusMessage() {
           if (this.scannedItems.length > 0) {
@@ -1524,110 +1297,40 @@
         },
 
         pluralize(n, one, few, many) {
-          return Utils.pluralize(n, one, few, many);
+          const mod10 = n % 10;
+          const mod100 = n % 100;
+          if (mod100 >= 11 && mod100 <= 19) return many;
+          if (mod10 === 1) return one;
+          if (mod10 >= 2 && mod10 <= 4) return few;
+          return many;
         },
 
         async init() {
           TelegramApp.init();
-
-          this.scanner = new BarcodeScanner();
-          this.audio = new AudioManager();
-
-          if (!this.scanner.init()) {
-            this.showToast('Не удалось инициализировать сканер', 'error');
-          }
+          this.scanner.init();
           this.audio.init();
-
           this.calculateDimensions();
 
-          this.setupEventListeners();
+          this._resizeHandler = () => this.calculateDimensions();
+          this._orientationHandler = () => {
+            setTimeout(() => this.calculateDimensions(), 100);
+          };
+
+          window.addEventListener("resize", this._resizeHandler);
+          window.addEventListener("orientationchange", this._orientationHandler);
 
           await this.checkPermission();
         },
 
-        setupEventListeners() {
-          this._resizeHandler = Utils.debounce(
-            () => this.calculateDimensions(),
-            100
-          );
-
-          this._orientationHandler = () => {
-            setTimeout(() => this.calculateDimensions(), 150);
-          };
-
-          window.addEventListener("resize", this._resizeHandler);
-          window.addEventListener(
-            "orientationchange",
-            this._orientationHandler
-          );
-        },
-
-        removeEventListeners() {
+        destroy() {
           if (this._resizeHandler) {
             window.removeEventListener("resize", this._resizeHandler);
-            this._resizeHandler = null;
           }
-
           if (this._orientationHandler) {
-            window.removeEventListener(
-              "orientationchange",
-              this._orientationHandler
-            );
-            this._orientationHandler = null;
+            window.removeEventListener("orientationchange", this._orientationHandler);
           }
-        },
-
-        handleVisibilityChange() {
-          if (document.hidden) {
-            this.pauseScanning();
-          } else {
-            if (this.appState === "scanner" && this.stream) {
-              this.resumeScanning();
-            }
-          }
-        },
-
-        pauseScanning() {
-          if (this.scanner) {
-            this.scanner.isActive = false;
-            if (this.scanner.rafId) {
-              cancelAnimationFrame(this.scanner.rafId);
-              this.scanner.rafId = null;
-            }
-          }
-          this.scannerActive = false;
-        },
-
-        resumeScanning() {
-          if (this.stream && !this.isDestroyed) {
-            this.startScanning();
-          }
-        },
-
-        destroy() {
-          this.isDestroyed = true;
-
-          if (this._toastTimeout) {
-            clearTimeout(this._toastTimeout);
-            this._toastTimeout = null;
-          }
-
-          this.removeEventListeners();
-
           this.stopCamera();
-
-          if (this.scanner) {
-            this.scanner.destroy();
-            this.scanner = null;
-          }
-
-          if (this.audio) {
-            this.audio.destroy();
-            this.audio = null;
-          }
-
-          this.scannedItems = [];
-          this.scannedCodes.clear();
+          this.scanner.stop();
         },
 
         calculateDimensions() {
@@ -1637,7 +1340,6 @@
           this.scannerHeight = Math.min(Math.floor(vh * 0.52), 480);
 
           const maxFrameWidth = Math.min(vw - 48, 400);
-
           const a4Ratio = 210 / 297;
 
           this.frameHeight = Math.floor(this.scannerHeight * 0.85);
@@ -1651,10 +1353,6 @@
 
         async checkPermission() {
           try {
-            if (!navigator.permissions || !navigator.permissions.query) {
-              return;
-            }
-
             const result = await navigator.permissions.query({
               name: "camera",
             });
@@ -1668,8 +1366,6 @@
             }
 
             result.addEventListener("change", async () => {
-              if (this.isDestroyed) return;
-
               if (result.state === "granted" && !this.stream) {
                 this.appState = "scanner";
                 this.permissionError = false;
@@ -1677,191 +1373,114 @@
                 await this.startCamera();
               } else if (result.state === "denied") {
                 this.permissionError = true;
-                this.stopCamera();
               }
             });
-          } catch (e) {}
+          } catch (e) {
+            this.appState = "permission";
+          }
         },
 
         async requestCameraPermission() {
-          if (this.isLoading || this.isDestroyed) return;
+  if (this.isLoading) return;
 
-          this.isLoading = true;
-          this.permissionError = false;
-          TelegramApp.hapticImpact("light");
+  this.isLoading = true;
+  this.permissionError = false;
+  TelegramApp.hapticImpact("light");
 
-          try {
-            this.appState = "scanner";
-            await this.$nextTick();
-            await Utils.delay(50);
-            await this.startCamera();
-          } catch (e) {
-            this.appState = "permission";
-            TelegramApp.hapticNotification("error");
-            this.audio?.playError();
+  try {
+    this.appState = "scanner";
+    await this.$nextTick();
+    await this.startCamera();
+  } catch (e) {
+    this.permissionError = true;
+    this.appState = "permission";
+    TelegramApp.hapticNotification("error");
+    this.audio.playError();
+  } finally {
+    this.isLoading = false;
+  }
+},
 
-            if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-              this.permissionError = true;
-              this.showToast('Доступ к камере запрещён', 'error');
-            } else if (e.name === 'NotFoundError') {
-              this.showToast('Камера не найдена на устройстве', 'error');
-            } else {
-              this.showToast('Ошибка камеры: ' + e.message, 'error');
-            }
-          } finally {
-            this.isLoading = false;
-          }
-        },
+async startCamera() {
+  await this.$nextTick();
+  await new Promise(r => setTimeout(r, 100));
+  
+  let stream = null;
+  
+  const constraints = [
+    { video: { facingMode: { exact: "environment" } }, audio: false },
+    { video: { facingMode: "environment" }, audio: false },
+    { video: true, audio: false },
+  ];
 
-        async startCamera() {
-          if (this.isDestroyed) return;
+  for (const constraint of constraints) {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(constraint);
+      break;
+    } catch (e) {
+      continue;
+    }
+  }
 
-          await this.$nextTick();
-          await Utils.delay(100);
-          
-          this.calculateDimensions();
+  if (!stream) {
+    throw new Error("Camera not available");
+  }
 
-          let stream = null;
+  this.stream = stream;
+  
+  const track = stream.getVideoTracks()[0];
+  if (track) {
+    const capabilities = track.getCapabilities?.() || {};
+    this.hasTorch = !!capabilities.torch;
+  }
 
-          const constraints = [
-            {
-              video: {
-                facingMode: "environment",
-                width: { ideal: 1920 },
-                height: { ideal: 1080 },
-              },
-              audio: false,
-            },
-            {
-              video: {
-                facingMode: "environment",
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-              },
-              audio: false,
-            },
-            {
-              video: {
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-              },
-              audio: false,
-            },
-            { video: true, audio: false },
-          ];
+  let video = this.$refs.videoElement;
+  
+  if (!video) {
+    await this.$nextTick();
+    await new Promise(r => setTimeout(r, 100));
+    video = this.$refs.videoElement;
+  }
+  
+  if (!video) {
+    video = document.querySelector('video');
+  }
+  
+  if (!video) {
+    throw new Error("Video element not found");
+  }
 
-          let lastError = null;
+  video.srcObject = null;
+  video.load();
+  
+  video.muted = true;
+  video.playsInline = true;
+  video.autoplay = true;
+  
+  video.srcObject = stream;
 
-          for (const constraint of constraints) {
-            try {
-              stream = await navigator.mediaDevices.getUserMedia(constraint);
-              break;
-            } catch (e) {
-              lastError = e;
-              continue;
-            }
-          }
+  await new Promise((resolve) => {
+    const done = () => resolve();
+    video.onloadedmetadata = done;
+    setTimeout(done, 2000);
+  });
 
-          if (!stream) {
-            throw lastError || new Error("Не удалось получить доступ к камере");
-          }
+  try {
+    await video.play();
+  } catch (e) {
+    document.addEventListener("click", () => video.play(), { once: true });
+    document.addEventListener("touchstart", () => video.play(), { once: true });
+  }
 
-          if (this.isDestroyed) {
-            stream.getTracks().forEach((track) => track.stop());
-            return;
-          }
-
-          this.stream = stream;
-
-          const track = stream.getVideoTracks()[0];
-          if (track) {
-            try {
-              const capabilities = track.getCapabilities?.() || {};
-              this.hasTorch = !!capabilities.torch;
-            } catch {
-              this.hasTorch = false;
-            }
-          }
-
-          let video = this.$refs.videoElement;
-
-          if (!video) {
-            await this.$nextTick();
-            await Utils.delay(100);
-            video = this.$refs.videoElement;
-          }
-
-          if (!video) {
-            throw new Error("Video элемент не найден");
-          }
-
-          video.srcObject = null;
-
-          try {
-            video.load();
-          } catch {}
-
-          video.muted = true;
-          video.playsInline = true;
-          video.autoplay = true;
-          video.setAttribute("playsinline", "");
-          video.setAttribute("webkit-playsinline", "");
-
-          video.srcObject = stream;
-
-          await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-              resolve();
-            }, 3000);
-
-            video.onloadedmetadata = () => {
-              clearTimeout(timeout);
-              resolve();
-            };
-
-            video.onerror = (e) => {
-              clearTimeout(timeout);
-              reject(new Error("Video error: " + e.message));
-            };
-          });
-
-          try {
-            await video.play();
-          } catch (e) {
-            const playOnInteraction = async () => {
-              try {
-                await video.play();
-                document.removeEventListener("click", playOnInteraction);
-                document.removeEventListener("touchstart", playOnInteraction);
-              } catch {}
-            };
-
-            document.addEventListener("click", playOnInteraction, {
-              once: true,
-            });
-            document.addEventListener("touchstart", playOnInteraction, {
-              once: true,
-            });
-          }
-
-          this.calculateDimensions();
-
-          this.startScanning();
-        },
+  this.startScanning();
+},
 
         stopCamera() {
           this.scannerActive = false;
-
-          if (this.scanner) {
-            this.scanner.stop();
-          }
+          this.scanner.stop();
 
           if (this.stream) {
-            this.stream.getTracks().forEach((track) => {
-              try {
-                track.stop();
-              } catch {}
-            });
+            this.stream.getTracks().forEach((track) => track.stop());
             this.stream = null;
           }
 
@@ -1869,9 +1488,6 @@
           if (video) {
             video.srcObject = null;
           }
-
-          this.hasTorch = false;
-          this.torchOn = false;
         },
 
         async toggleTorch() {
@@ -1881,21 +1497,17 @@
 
           try {
             const track = this.stream.getVideoTracks()[0];
-            if (!track) return;
-
             this.torchOn = !this.torchOn;
-
             await track.applyConstraints({
               advanced: [{ torch: this.torchOn }],
             });
           } catch (e) {
             this.torchOn = false;
-            this.showToast('Не удалось переключить фонарик', 'warn');
           }
         },
 
         startScanning() {
-          if (this.scannerActive || this.isDestroyed || !this.scanner) return;
+          if (this.scannerActive) return;
 
           this.scannerActive = true;
           this.scanner.isActive = true;
@@ -1903,9 +1515,7 @@
         },
 
         async scanLoop() {
-          if (!this.scanner?.isActive || !this.scannerActive || this.isDestroyed) {
-            return;
-          }
+          if (!this.scanner.isActive || !this.scannerActive) return;
 
           const now = performance.now();
 
@@ -1915,25 +1525,32 @@
             const video = this.$refs.videoElement;
             const container = this.$refs.scannerContainer;
 
-            if (video?.videoWidth && video?.videoHeight && container) {
+            if (video?.videoWidth && container) {
               const containerRect = container.getBoundingClientRect();
-
-              const expandFactor = 1.8;
               const frameRect = {
-                left: containerRect.left + (containerRect.width - this.frameWidth * expandFactor) / 2,
-                top: containerRect.top + (containerRect.height - this.frameHeight * expandFactor) / 2,
-                width: this.frameWidth * expandFactor,
-                height: this.frameHeight * expandFactor,
+                left:
+                  containerRect.left +
+                  (containerRect.width - this.frameWidth) / 2,
+                top:
+                  containerRect.top +
+                  (containerRect.height - this.frameHeight) / 2,
+                width: this.frameWidth,
+                height: this.frameHeight,
               };
 
-              try {
-                const result = await this.scanner.decode(video, frameRect, containerRect);
+              const result = await this.scanner.decode(
+                video,
+                frameRect,
+                containerRect
+              );
 
-                if (result && now - this.scanner.lastScanTime >= this.scanner.scanCooldown) {
-                  this.handleScanResult(result);
-                  this.scanner.lastScanTime = now;
-                }
-              } catch (e) {}
+              if (
+                result &&
+                now - this.scanner.lastScanTime >= this.scanner.scanCooldown
+              ) {
+                this.handleScanResult(result);
+                this.scanner.lastScanTime = now;
+              }
             }
           }
 
@@ -1941,22 +1558,19 @@
         },
 
         handleScanResult(rawText) {
-          if (this.isDestroyed) return;
-
           const code = this.extractCode(rawText);
           if (!code) return;
 
-          if (this.scannedCodes.has(code)) {
+          if (this.scannedCodes[code]) {
             TelegramApp.hapticImpact("light");
             return;
           }
 
-          this.scannedCodes.set(code, true);
+          this.scannedCodes[code] = true;
 
           const type = this.detectCodeType(rawText, code);
-
           const item = {
-            id: Utils.generateId(),
+            id: ++this.itemIdCounter,
             code: code,
             type: type,
             raw: rawText,
@@ -1967,7 +1581,6 @@
           };
 
           this.scannedItems.unshift(item);
-
           this.triggerSuccessFeedback();
 
           this.lookupProduct(item);
@@ -1989,7 +1602,6 @@
           }
 
           const numericOnly = text.replace(/\D/g, "");
-
           if (/^\d{8}$|^\d{12,14}$/.test(numericOnly)) {
             return numericOnly;
           }
@@ -2003,35 +1615,30 @@
 
         detectCodeType(raw, code) {
           if (raw !== code && raw.length > 20) return "QR Code";
-
           if (/^\d{13}$/.test(code)) return "EAN-13";
           if (/^\d{8}$/.test(code)) return "EAN-8";
           if (/^\d{12}$/.test(code)) return "UPC-A";
           if (/^\d{14}$/.test(code)) return "GTIN-14";
           if (/^[A-Z0-9]+$/.test(code) && code.length <= 20) return "CODE-39";
-
           return "QR Code";
         },
 
         lookupProduct(item) {
           setTimeout(() => {
-            if (this.isDestroyed) return;
-
             const itemIndex = this.scannedItems.findIndex(
               (i) => i.id === item.id
             );
-
             if (itemIndex === -1) return;
 
-            const productInfo = PRODUCT_DATABASE[item.code] || null;
+            const productInfo = PRODUCT_DATABASE[item.code];
 
             this.scannedItems[itemIndex] = {
               ...this.scannedItems[itemIndex],
               loading: false,
-              productInfo: productInfo,
+              productInfo: productInfo || null,
               notFound: !productInfo,
             };
-          }, 300 + Math.random() * 400);
+          }, 500);
         },
 
         triggerSuccessFeedback() {
@@ -2042,12 +1649,11 @@
 
           TelegramApp.hapticNotification("success");
 
-          this.audio?.playSuccess();
+          this.audio.playSuccess();
         },
 
         generateQrUrl(code) {
-          const encoded = encodeURIComponent(code);
-          return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encoded}&margin=8&format=svg`;
+          return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(code)}&margin=8&format=svg`;
         },
 
         generateBarcodeUrl(code) {
@@ -2062,89 +1668,41 @@
           if (/^\d{12}$/.test(numericCode)) {
             return `https://barcodeapi.org/api/upca/${numericCode}`;
           }
-
           return `https://barcodeapi.org/api/128/${encodeURIComponent(code)}`;
         },
 
         handleImageError(event) {
-          const img = event.target;
-          if (img) {
-            img.style.display = "none";
-
-            const parent = img.parentElement;
-            if (parent && !parent.querySelector(".img-error-placeholder")) {
-              const placeholder = document.createElement("div");
-              placeholder.className =
-                "img-error-placeholder flex items-center justify-center h-20 text-neutral-400 text-xs";
-              placeholder.textContent = "Не удалось загрузить";
-              parent.insertBefore(placeholder, img);
-            }
-          }
-        },
-
-        showToast(message, type = 'success', duration = 2000) {
-          if (this._toastTimeout) {
-            clearTimeout(this._toastTimeout);
-          }
-          this.toastMessage = message;
-          this.toastType = type;
-          this.showToast = true;
-          this._toastTimeout = setTimeout(() => {
-            this.showToast = false;
-            this._toastTimeout = null;
-          }, duration);
+          event.target.style.display = "none";
         },
 
         async copyCode(code) {
-          if (!code) return;
-
           TelegramApp.hapticImpact("light");
 
           try {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              await navigator.clipboard.writeText(code);
-            } else {
-              const textArea = document.createElement("textarea");
-              textArea.value = code;
-              textArea.style.position = "fixed";
-              textArea.style.left = "-9999px";
-              textArea.style.top = "-9999px";
-              document.body.appendChild(textArea);
-              textArea.focus();
-              textArea.select();
-
-              try {
-                document.execCommand("copy");
-              } finally {
-                document.body.removeChild(textArea);
-              }
-            }
-
-            this.showToast('Скопировано', 'success', 2000);
+            await navigator.clipboard.writeText(code);
+            this.showCopyToast = true;
             TelegramApp.hapticNotification("success");
+
+            setTimeout(() => {
+              this.showCopyToast = false;
+            }, 2000);
           } catch (e) {
-            this.showToast('Не удалось скопировать', 'error');
             TelegramApp.hapticNotification("error");
-            TelegramApp.showAlert("Не удалось скопировать код");
           }
         },
 
         removeItem(id) {
-          if (!id) return;
-
           TelegramApp.hapticImpact("medium");
 
           const item = this.scannedItems.find((i) => i.id === id);
           if (item) {
-            this.scannedCodes.delete(item.code);
+            delete this.scannedCodes[item.code];
           }
 
           this.scannedItems = this.scannedItems.filter((i) => i.id !== id);
         },
 
         confirmClearAll() {
-          if (this.scannedItems.length === 0) return;
-
           TelegramApp.hapticImpact("medium");
 
           TelegramApp.showConfirm(
@@ -2159,11 +1717,12 @@
 
         clearAll() {
           this.scannedItems = [];
-          this.scannedCodes.clear();
+          this.scannedCodes = {};
           TelegramApp.hapticNotification("success");
         },
       }));
-      });
+
+      Alpine.start();
     </script>
   </body>
 </html>
