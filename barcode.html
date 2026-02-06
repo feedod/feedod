@@ -992,11 +992,11 @@
       </div>
     </div>
     
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-<script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+      <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+      <script src="https://unpkg.com/@zxing/library@0.21.3"></script>
 
     <script>
-      const { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } = window.ZXing;
+      const { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } = ZXing;
       
       const PRODUCT_DATABASE = Object.freeze({
         "4607065370015": {
