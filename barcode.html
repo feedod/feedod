@@ -9,6 +9,7 @@
     <meta name="color-scheme" content="dark" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style type="text/tailwindcss">
       @theme {
         --color-bg: #000000;
@@ -467,15 +468,7 @@
         class="relative overflow-hidden rounded-3xl bg-black"
         :style="{ height: scannerHeight + 'px' }"
       >
-        <video
-          x-ref="videoElement"
-          autoplay
-          playsinline
-          webkit-playsinline
-          muted
-          class="absolute inset-0 h-full w-full object-cover"
-          style="z-index: 1; background: #000;"
-        ></video>
+        <div id="reader" class="absolute inset-0" style="z-index: 1; background: #000;"></div>
 
             <div class="pointer-events-none absolute inset-0">
               <div
@@ -828,11 +821,6 @@
 
     <script type="module">
       import Alpine from "https://cdn.jsdelivr.net/npm/alpinejs@3/dist/module.esm.js";
-      import {
-        BrowserMultiFormatReader,
-        BarcodeFormat,
-        DecodeHintType,
-      } from "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/+esm";
 
       const PRODUCT_DATABASE = {
         "4607065370015": {
@@ -1165,102 +1153,6 @@
         }
       }
 
-      class BarcodeScanner {
-        constructor() {
-          this.reader = null;
-          this.canvas = null;
-          this.ctx = null;
-          this.isActive = false;
-          this.rafId = null;
-          this.lastScanTime = 0;
-          this.scanCooldown = 1000;
-          this.frameInterval = 1000 / 10;
-          this.lastFrameTime = 0;
-        }
-
-        init() {
-          const hints = new Map();
-          hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-            BarcodeFormat.QR_CODE,
-            BarcodeFormat.EAN_13,
-            BarcodeFormat.EAN_8,
-            BarcodeFormat.CODE_128,
-            BarcodeFormat.CODE_39,
-            BarcodeFormat.UPC_A,
-            BarcodeFormat.UPC_E,
-            BarcodeFormat.DATA_MATRIX,
-            BarcodeFormat.PDF_417,
-            BarcodeFormat.ITF,
-          ]);
-          hints.set(DecodeHintType.TRY_HARDER, true);
-
-          this.reader = new BrowserMultiFormatReader(hints);
-          this.canvas = new OffscreenCanvas(1, 1);
-          this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
-        }
-
-        async decode(video, frameRect, containerRect) {
-          if (!video || !video.videoWidth || !video.videoHeight) {
-            return null;
-          }
-
-          try {
-            const scaleX = video.videoWidth / containerRect.width;
-            const scaleY = video.videoHeight / containerRect.height;
-
-            const sx = Math.max(
-              0,
-              (frameRect.left - containerRect.left) * scaleX
-            );
-            const sy = Math.max(
-              0,
-              (frameRect.top - containerRect.top) * scaleY
-            );
-            const sw = Math.min(
-              frameRect.width * scaleX,
-              video.videoWidth - sx
-            );
-            const sh = Math.min(
-              frameRect.height * scaleY,
-              video.videoHeight - sy
-            );
-
-            if (sw <= 0 || sh <= 0) return null;
-
-            this.canvas.width = Math.floor(sw);
-            this.canvas.height = Math.floor(sh);
-
-            this.ctx.drawImage(
-              video,
-              sx,
-              sy,
-              sw,
-              sh,
-              0,
-              0,
-              this.canvas.width,
-              this.canvas.height
-            );
-
-            const result = this.reader.decodeFromCanvas(this.canvas);
-            return result?.getText() || null;
-          } catch (e) {
-            return null;
-          }
-        }
-
-        stop() {
-          this.isActive = false;
-          if (this.rafId) {
-            cancelAnimationFrame(this.rafId);
-            this.rafId = null;
-          }
-          try {
-            this.reader?.reset();
-          } catch {}
-        }
-      }
-
       Alpine.data("ScannerApp", () => ({
         appState: "permission",
         isLoading: false,
@@ -1280,7 +1172,7 @@
         frameHeight: 0,
 
         stream: null,
-        scanner: new BarcodeScanner(),
+        qrScanner: null,
         audio: new AudioManager(),
 
         _resizeHandler: null,
@@ -1305,7 +1197,6 @@
 
         async init() {
           TelegramApp.init();
-          this.scanner.init();
           this.audio.init();
           this.calculateDimensions();
 
@@ -1327,8 +1218,7 @@
           if (this._orientationHandler) {
             window.removeEventListener("orientationchange", this._orientationHandler);
           }
-          this.stopCamera();
-          this.scanner.stop();
+          this.stopScanner();
         },
 
         calculateDimensions() {
@@ -1358,7 +1248,7 @@
             if (result.state === "granted") {
               this.appState = "scanner";
               await this.$nextTick();
-              await this.startCamera();
+              await this.startScanner();
             } else if (result.state === "denied") {
               this.permissionError = true;
             }
@@ -1368,7 +1258,7 @@
                 this.appState = "scanner";
                 this.permissionError = false;
                 await this.$nextTick();
-                await this.startCamera();
+                await this.startScanner();
               } else if (result.state === "denied") {
                 this.permissionError = true;
               }
@@ -1379,180 +1269,100 @@
         },
 
         async requestCameraPermission() {
-  if (this.isLoading) return;
+          if (this.isLoading) return;
 
-  this.isLoading = true;
-  this.permissionError = false;
-  TelegramApp.hapticImpact("light");
+          this.isLoading = true;
+          this.permissionError = false;
+          TelegramApp.hapticImpact("light");
 
-  try {
-    this.appState = "scanner";
-    await this.$nextTick();
-    await this.startCamera();
-  } catch (e) {
-    this.permissionError = true;
-    this.appState = "permission";
-    TelegramApp.hapticNotification("error");
-    this.audio.playError();
-  } finally {
-    this.isLoading = false;
-  }
-},
-
-async startCamera() {
-  await this.$nextTick();
-  await new Promise(r => setTimeout(r, 100));
-  
-  let stream = null;
-  
-  const constraints = [
-    { video: { facingMode: { exact: "environment" } }, audio: false },
-    { video: { facingMode: "environment" }, audio: false },
-    { video: true, audio: false },
-  ];
-
-  for (const constraint of constraints) {
-    try {
-      stream = await navigator.mediaDevices.getUserMedia(constraint);
-      break;
-    } catch (e) {
-      continue;
-    }
-  }
-
-  if (!stream) {
-    throw new Error("Camera not available");
-  }
-
-  this.stream = stream;
-  
-  const track = stream.getVideoTracks()[0];
-  if (track) {
-    const capabilities = track.getCapabilities?.() || {};
-    this.hasTorch = !!capabilities.torch;
-  }
-
-  let video = this.$refs.videoElement;
-  
-  if (!video) {
-    await this.$nextTick();
-    await new Promise(r => setTimeout(r, 100));
-    video = this.$refs.videoElement;
-  }
-  
-  if (!video) {
-    video = document.querySelector('video');
-  }
-  
-  if (!video) {
-    throw new Error("Video element not found");
-  }
-
-  video.srcObject = null;
-  video.load();
-  
-  video.muted = true;
-  video.playsInline = true;
-  video.autoplay = true;
-  
-  video.srcObject = stream;
-
-  await new Promise((resolve) => {
-    const done = () => resolve();
-    video.onloadedmetadata = done;
-    setTimeout(done, 2000);
-  });
-
-  try {
-    await video.play();
-  } catch (e) {
-    document.addEventListener("click", () => video.play(), { once: true });
-    document.addEventListener("touchstart", () => video.play(), { once: true });
-  }
-
-  this.startScanning();
-},
-
-        stopCamera() {
-          this.scannerActive = false;
-          this.scanner.stop();
-
-          if (this.stream) {
-            this.stream.getTracks().forEach((track) => track.stop());
-            this.stream = null;
-          }
-
-          const video = this.$refs.videoElement;
-          if (video) {
-            video.srcObject = null;
+          try {
+            this.appState = "scanner";
+            await this.$nextTick();
+            await this.startScanner();
+          } catch (e) {
+            this.permissionError = true;
+            this.appState = "permission";
+            TelegramApp.hapticNotification("error");
+            this.audio.playError();
+          } finally {
+            this.isLoading = false;
           }
         },
 
+        async startScanner() {
+          await this.$nextTick();
+          await new Promise(r => setTimeout(r, 100));
+
+          const config = {
+            fps: 10,
+            qrbox: { width: this.frameWidth, height: this.frameHeight },
+            aspectRatio: window.innerWidth / window.innerHeight,
+            disableFlip: false,
+            formatsToSupport: [
+              Html5QrcodeSupportedFormats.EAN_13,
+              Html5QrcodeSupportedFormats.EAN_8,
+              Html5QrcodeSupportedFormats.UPC_A,
+              Html5QrcodeSupportedFormats.UPC_E,
+              Html5QrcodeSupportedFormats.CODE_128,
+              Html5QrcodeSupportedFormats.CODE_39,
+              Html5QrcodeSupportedFormats.QR_CODE,
+              Html5QrcodeSupportedFormats.DATA_MATRIX,
+              Html5QrcodeSupportedFormats.PDF417,
+              Html5QrcodeSupportedFormats.ITF
+            ]
+          };
+
+          this.qrScanner = new Html5Qrcode("reader");
+
+          const self = this;
+
+          try {
+            await this.qrScanner.start(
+              { facingMode: "environment" },
+              config,
+              (decodedText, decodedResult) => {
+                self.handleScanResult(decodedText);
+              },
+              (errorMessage) => {
+                // Игнорировать ошибки, они нормальны во время сканирования
+              }
+            );
+
+            this.stream = this.qrScanner.getRunningTrackCameraCapabilities().getVideoTrack();
+            const capabilities = this.stream.getCapabilities() || {};
+            this.hasTorch = !!capabilities.torch;
+
+            this.scannerActive = true;
+          } catch (err) {
+            console.error("Ошибка запуска сканера:", err);
+            this.stopScanner();
+            throw err;
+          }
+        },
+
+        stopScanner() {
+          this.scannerActive = false;
+          if (this.qrScanner) {
+            this.qrScanner.stop().catch(err => console.error("Ошибка остановки сканера:", err));
+            this.qrScanner.clear().catch(err => console.error("Ошибка очистки сканера:", err));
+            this.qrScanner = null;
+          }
+          this.stream = null;
+        },
+
         async toggleTorch() {
-          if (!this.stream || !this.hasTorch) return;
+          if (!this.hasTorch || !this.stream) return;
 
           TelegramApp.hapticImpact("light");
 
           try {
-            const track = this.stream.getVideoTracks()[0];
             this.torchOn = !this.torchOn;
-            await track.applyConstraints({
-              advanced: [{ torch: this.torchOn }],
+            await this.stream.applyConstraints({
+              advanced: [{ torch: this.torchOn }]
             });
           } catch (e) {
             this.torchOn = false;
           }
-        },
-
-        startScanning() {
-          if (this.scannerActive) return;
-
-          this.scannerActive = true;
-          this.scanner.isActive = true;
-          this.scanLoop();
-        },
-
-        async scanLoop() {
-          if (!this.scanner.isActive || !this.scannerActive) return;
-
-          const now = performance.now();
-
-          if (now - this.scanner.lastFrameTime >= this.scanner.frameInterval) {
-            this.scanner.lastFrameTime = now;
-
-            const video = this.$refs.videoElement;
-            const container = this.$refs.scannerContainer;
-
-            if (video?.videoWidth && container) {
-              const containerRect = container.getBoundingClientRect();
-              const frameRect = {
-                left:
-                  containerRect.left +
-                  (containerRect.width - this.frameWidth) / 2,
-                top:
-                  containerRect.top +
-                  (containerRect.height - this.frameHeight) / 2,
-                width: this.frameWidth,
-                height: this.frameHeight,
-              };
-
-              const result = await this.scanner.decode(
-                video,
-                frameRect,
-                containerRect
-              );
-
-              if (
-                result &&
-                now - this.scanner.lastScanTime >= this.scanner.scanCooldown
-              ) {
-                this.handleScanResult(result);
-                this.scanner.lastScanTime = now;
-              }
-            }
-          }
-
-          this.scanner.rafId = requestAnimationFrame(() => this.scanLoop());
         },
 
         handleScanResult(rawText) {
@@ -1724,3 +1534,4 @@ async startCamera() {
     </script>
   </body>
 </html>
+```​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​
